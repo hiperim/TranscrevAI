@@ -103,14 +103,15 @@ class TestAudioRecorder:
                     mock_stream_instance = MagicMock()
 
                     def mock_start():
-                        # simulate audio data callback after recording starts
+                        # Simulate audio data callback after recording starts
                         fake_data = np.random.rand(1024, 1).astype(np.float32)
-                        for _ in range(10):  # simulate multiple callbacks
+                        for _ in range(10):  # Simulate multiple callbacks
                             self._recorder._audio_callback(fake_data, 1024, None, None)
                     mock_stream_instance.start.side_effect = mock_start
                     mock_stream.return_value = mock_stream_instance
                     await self._recorder.start_recording()
                     await asyncio.sleep(1.5)
+            frames_copy = self._recorder._frames.copy()
             await self._recorder.stop_recording()
             if sys.platform == "win32":
                 validated = False
@@ -123,7 +124,7 @@ class TestAudioRecorder:
                             result = subprocess.run(cmd, capture_output=True, text=True)
                             if result.returncode == 0:
                                 converted_duration = float(result.stdout.strip())
-                                source_duration = sum(frame.shape[0] for frame in self._recorder._frames) / self._recorder.sample_rate
+                                source_duration = sum(frame.shape[0] for frame in frames_copy) / self._recorder.sample_rate
                                 if abs(source_duration - converted_duration) <= 0.15:
                                     validated = True
                                     break
