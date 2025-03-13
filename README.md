@@ -1,4 +1,4 @@
-Simplified project workflow:
+Simplified project's workflow:
 
 (1)|Audio Input| --> (2)[Platform check]
 
