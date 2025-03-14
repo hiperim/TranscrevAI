@@ -378,7 +378,7 @@ class TestPerformance():
         path = Path(path)
         for i in range(max_retries):
             try:
-                if sys.platform == "win32":
+                if sys.platform == "win32": 
                     if not path.exists():
                         return True
                     # add process tree termination
