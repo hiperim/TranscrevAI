@@ -281,11 +281,21 @@ class TestFileOperations(AsyncTestCase):
     async def test_model_lifecycle(self):
         test_url = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
         try:
+            # Removes existing model directory
+            model_dir = os.path.join(MODEL_DIR, "en")
+            if os.path.exists(model_dir):
+                shutil.rmtree(model_dir, ignore_errors=True)
+                logger.info(f"Removed existing EN model directory for clean test: {model_dir}")
             model_path = await FileManager.download_and_extract_model(test_url, "en", MODEL_DIR)
             assert os.path.isdir(model_path), "Model directory does not exist"
             required_files = ["am/final.mdl", "conf/model.conf", "graph/phones/word_boundary.int", "graph/Gr.fst", "graph/HCLr.fst", "ivector/final.ie"]
-            assert all(os.path.exists(os.path.join(model_path, f)) for f in required_files), \
-                "Missing required model files"
+            missing_files = []
+            for file in required_files:
+                full_path = os.path.join(model_path, file)
+                if not os.path.exists(full_path):
+                    missing_files.append(file)
+                    logger.error(f"Missing required file: {full_path}")
+            assert len(missing_files) == 0, f"Missing files: {missing_files}"
         except Exception as e:
             pytest.fail(f"Model lifecycle test failed: {str(e)}")
 
