@@ -289,7 +289,7 @@ class TestFileOperations(AsyncTestCase):
             model_path = await FileManager.download_and_extract_model(test_url, "en", MODEL_DIR)
             assert os.path.isdir(model_path), "Model directory does not exist"
             required_files = ["am/final.mdl", "conf/model.conf", "graph/phones/word_boundary.int", "graph/Gr.fst", "graph/HCLr.fst", "ivector/final.ie"]
-            missing_files = []
+            missing_files = [] 
             for file in required_files:
                 full_path = os.path.join(model_path, file)
                 if not os.path.exists(full_path):
