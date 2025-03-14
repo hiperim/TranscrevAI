@@ -225,7 +225,6 @@ class FileManager():
             os.remove(zip_path)
             raise RuntimeError(f"Failed to download and extract model")
 
-
     @staticmethod
     async def download_and_extract_model(url, language_code, output_dir):
         from urllib.parse import urlparse
