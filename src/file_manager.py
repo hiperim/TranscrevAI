@@ -173,17 +173,58 @@ class FileManager():
                 with open(zip_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=1024):
                         f.write(chunk)
+                # Create a temporary directory for extraction
+                temp_extract_dir = os.path.join(output_dir, f"temp_{language_code}")
+                if os.path.exists(temp_extract_dir):
+                    shutil.rmtree(temp_extract_dir)
+                os.makedirs(temp_extract_dir, exist_ok=True)
                 with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                    zip_ref.extractall(model_path)
-                os.remove(zip_path)
-                logger.info(f"Model extracted: {model_path}")
-                return model_path
+                    zip_ref.extractall(temp_extract_dir)
+                # Checks if there is only one file and if folder is empty
+                contents = os.listdir(temp_extract_dir)
+                if len(contents) == 1 and os.path.isdir(os.path.join(temp_extract_dir, contents[0])):
+                    nested_dir = os.path.join(temp_extract_dir, contents[0])
+                    # Create the final model directory
+                    if os.path.exists(model_path):
+                        shutil.rmtree(model_path)
+                    os.makedirs(model_path, exist_ok=True)
+                    # Only copy the required folders
+                    required_folders = ["am", "conf", "graph", "ivector"]
+                    for folder in required_folders:
+                        src_folder = os.path.join(nested_dir, folder)
+                        dst_folder = os.path.join(model_path, folder)
+                        if os.path.exists(src_folder):
+                            shutil.copytree(src_folder, dst_folder)
+                else:
+                    # No nested directory: directly copy required folders
+                    if os.path.exists(model_path):
+                        shutil.rmtree(model_path)
+                    os.makedirs(model_path, exist_ok=True)
+                    required_folders = ["am", "conf", "graph", "ivector"]
+                    for folder in required_folders:
+                        src_folder = os.path.join(temp_extract_dir, folder)
+                        dst_folder = os.path.join(model_path, folder)
+                        if os.path.exists(src_folder):
+                            shutil.copytree(src_folder, dst_folder)
+                    # Clean up
+                    if os.path.exists(temp_extract_dir):
+                        shutil.rmtree(temp_extract_dir)
+                    os.remove(zip_path)
+                    logger.info(f"Model extracted: {model_path}")
+                     # Verify required files exist
+                    required_files = ["am/final.mdl", "conf/model.conf", "graph/phones/word_boundary.int", 
+                                    "graph/Gr.fst", "graph/HCLr.fst", "ivector/final.ie"]
+                    missing = [f for f in required_files if not os.path.exists(os.path.join(model_path, f))]
+                    if missing:
+                        logger.warning(f"Some model files missing after extraction: {missing}")
+                    return model_path
             except Exception as e:
                 logger.error(f"Model download failed on attempt {attempt + 1}: {e}")
                 time.sleep(2 * (attempt + 1))
-                if os.path.exists(zip_path):
-                    os.remove(zip_path)
-        raise RuntimeError(f"Failed to download and extract model")
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+            raise RuntimeError(f"Failed to download and extract model")
+
 
     @staticmethod
     async def download_and_extract_model(url, language_code, output_dir):
