@@ -305,14 +305,20 @@ class TestDiarization():
     async def test_speaker_identification(self, generate_test_audio):
         test_file = generate_test_audio(duration=10.0, speakers=2)
         try:
-            with patch("pyAudioAnalysis.audioSegmentation.speaker_diarization") as mock_diarize:
-                mock_diarize.return_value = (np.array([0,1]), [], [], 2)
+            with patch("src.speaker_diarization.SpeakerDiarization._diarize") as mock_diarize:
+                mock_diarize.return_value = mock_diarize.return_value = [{"start": 0.0, "end": 1.0, "speaker": "S1"}, {"start": 1.0, "end": 2.0, "speaker": "S2"}]
                 diarizer = SpeakerDiarization()
                 segments = await diarizer.diarize_audio(str(test_file))
                 unique_speakers = {s["speaker"] for s in segments}
                 assert 1 <= len(unique_speakers) <= 2
         finally:
-            test_file.unlink(missing_ok=True)
+            # Clean-up
+            try:
+                if os.path.exists(test_file):
+                    os.unlink(test_file)
+            except Exception as e:
+                logger.warning(f"Failed to delete temporary file: {e}")
+
 
 class TestSubtitles():
     @pytest.mark.asyncio
@@ -322,10 +328,8 @@ class TestSubtitles():
         Path(temp_dir).mkdir(parents=True, exist_ok=True)
         output_path = Path(temp_dir) / "test.srt"
         try:
-            test_segments = [{"start": 0.0, "end": 1.0, "speaker": "S1"},
-                             {"start": 1.5, "end": 2.5, "speaker": "S2"}]
-            test_transcription = [{"start": 0.2, "end": 0.8, "text": "Test 1"},
-                                  {"start": 1.6, "end": 2.2, "text": "Test 2"}]
+            test_segments = [{"start": 0.0, "end": 1.0, "speaker": "S1"}, {"start": 1.5, "end": 2.5, "speaker": "S2"}]
+            test_transcription = [{"start": 0.2, "end": 0.8, "text": "Test 1"}, {"start": 1.6, "end": 2.2, "text": "Test 2"}]
             await generate_srt(test_transcription, test_segments, str(output_path))
             assert output_path.exists()
             async with aiofiles.open(output_path, "r") as f:
@@ -372,7 +376,12 @@ class TestPerformance():
                 processing_time = time.monotonic() - start_time
                 assert processing_time < 15.0
         finally:
-            test_file.unlink(missing_ok=True)
+            # Clean-up
+            try:
+                if os.path.exists(test_file):
+                    os.unlink(test_file)
+            except Exception as e:
+                logger.warning(f"Failed to delete temporary file: {e}")
 
     async def safe_remove(path: str, max_retries: int = 10) -> bool:
         path = Path(path)
