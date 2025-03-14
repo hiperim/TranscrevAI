@@ -147,18 +147,6 @@ class FileManager():
             raise
 
     @staticmethod
-    def calculate_checksum(file_path):
-        sha256_hash = hashlib.sha256()
-        try:
-            with open(file_path, "rb") as f:
-                for byte_block in iter(lambda: f.read(4096), b""):
-                    sha256_hash.update(byte_block)
-            return sha256_hash.hexdigest()
-        except Exception as e:
-            logger.error(f"Checksum calculation failed: {e}")
-            raise
-
-    @staticmethod
     def _sync_download_and_extract(url, language_code, output_dir):
         model_path = os.path.join(output_dir, language_code)
         if os.path.exists(model_path) and any(os.listdir(model_path)):
