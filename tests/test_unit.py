@@ -340,10 +340,11 @@ class TestSubtitles():
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 class TestFullPipeline():
+    @pytest.mark.asyncio
     @pytest.mark.timeout(30)
     @patch("src.transcription.Model")
     @patch("src.transcription.transcribe_audio_with_progress")
-    async def test_recording_to_subtitles(self, mock_transcribe, generate_test_audio): # Parameter "mock_model" (before generate_test_audio) removed. Yet to test.
+    async def test_recording_to_subtitles(self, mock_transcribe, mock_model, generate_test_audio): 
         mock_transcribe.return_value = [(100, [{"text": "Test transcription", "start": 0.0, "end": 2.0}])]
         temp_dir = tempfile.mkdtemp()
         try:
