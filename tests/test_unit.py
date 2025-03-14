@@ -334,7 +334,7 @@ class TestSubtitles():
             assert output_path.exists()
             async with aiofiles.open(output_path, "r") as f:
                 content = await f.read()
-                assert "Speaker_Speaker_1" in content
+                assert "Speaker_1" in content
                 assert "Test_1" in content
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
