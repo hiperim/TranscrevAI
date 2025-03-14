@@ -207,17 +207,16 @@ class FileManager():
                         if os.path.exists(src_folder):
                             shutil.copytree(src_folder, dst_folder)
                     # Clean up
-                    if os.path.exists(temp_extract_dir):
-                        shutil.rmtree(temp_extract_dir)
-                    os.remove(zip_path)
-                    logger.info(f"Model extracted: {model_path}")
-                     # Verify required files exist
-                    required_files = ["am/final.mdl", "conf/model.conf", "graph/phones/word_boundary.int", 
-                                    "graph/Gr.fst", "graph/HCLr.fst", "ivector/final.ie"]
-                    missing = [f for f in required_files if not os.path.exists(os.path.join(model_path, f))]
-                    if missing:
-                        logger.warning(f"Some model files missing after extraction: {missing}")
-                    return model_path
+                if os.path.exists(temp_extract_dir):
+                    shutil.rmtree(temp_extract_dir)
+                os.remove(zip_path)
+                logger.info(f"Model extracted: {model_path}")
+                # Verify required files exist
+                required_files = ["am/final.mdl", "conf/model.conf", "graph/phones/word_boundary.int", "graph/Gr.fst", "graph/HCLr.fst", "ivector/final.ie"]
+                missing = [f for f in required_files if not os.path.exists(os.path.join(model_path, f))]
+                if missing:
+                    logger.warning(f"Some model files missing after extraction: {missing}")
+                return model_path
             except Exception as e:
                 logger.error(f"Model download failed on attempt {attempt + 1}: {e}")
                 time.sleep(2 * (attempt + 1))
