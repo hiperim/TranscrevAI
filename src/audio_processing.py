@@ -129,7 +129,7 @@ class AtomicAudioFile:
             # subprocess.run(["powershell", "$handleCloser = Add-Type -PassThru -TypeDefinition 'using System; using System.Runtime.InteropServices; public class HandleCloser { [DllImport(\"kernel32.dll\", SetLastError = true)] public static extern bool CloseHandle(IntPtr handle); }'; foreach ($proc in Get-Process explorer) { try { [void][HandleCloser]::CloseHandle($proc.Handle) } catch {} }"], shell=True, check=False)
             subprocess.run(["powershell", "Get-Process explorer | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object {$_.Refresh(); if ($_.Responding) {$_.CloseMainWindow() | Out-Null}}"], shell=True, check=False)
         except Exception as e:
-            logger.debug(f"Cleanup error: {e}")
+            logger.debug(f"Cleanup error: {e}") 
 
     def _force_file_sync(self, path):
         # Robust file synchronization
