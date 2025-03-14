@@ -4,10 +4,6 @@ import os
 import subprocess
 import static_ffmpeg
 import sys
-from pyAudioAnalysis import audioSegmentation as aS
-from pyAudioAnalysis.MidTermFeatures import mid_feature_extraction
-from scipy.io import wavfile
-from src.file_manager import FileManager
 import numpy as np
 import librosa
 import regex as re
@@ -15,6 +11,11 @@ import shutil
 import warnings
 from scipy.fftpack import fft
 from enum import Enum
+from unittest.mock import patch
+from pyAudioAnalysis import audioSegmentation as aS
+from pyAudioAnalysis.MidTermFeatures import mid_feature_extraction
+from scipy.io import wavfile
+from src.file_manager import FileManager
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class SpeakerDiarization:
                 raise FileNotFoundError(f"Audio file not found: {audio_file}")
             if os.path.getsize(audio_file) == 0:
                 raise ValueError("Audio file is empty")
+            # x = array of audio data in numerical format (int or float)
             Fs, x = wavfile.read(audio_file)
             min_samples = int(Fs * 0.05)
             if len(x) < min_samples:
@@ -115,6 +117,7 @@ class SpeakerDiarization:
                 speech_samples.append(x[start_sample:end_sample])
             if not speech_samples:
                 raise ValueError("VAD segments contain no audio data")
+            # Parameter representing speech samples after VAD (filtered out non-speech segments)
             x_filt = np.concatenate(speech_samples)          
             if Fs != 16000:
                 logger.warning(f"Resampling from {Fs}Hz to 16kHz")
@@ -134,12 +137,17 @@ class SpeakerDiarization:
             min_samples = int(Fs * 0.05)
             if len(x_filt) < min_samples:
                 raise ValueError(f"Audio too short for windowing: {len(x_filt)/Fs:.2f}s < {min_samples/Fs:.2f}s")
-            features = mid_feature_extraction(signal=x_filt,
-                                              sampling_rate=Fs,
-                                              mid_window=1.0,
-                                              mid_step=0.5,
-                                              short_window=0.05,
-                                              short_step=0.05)
+            # TEST
+            if len(x_filt) == 0:
+                logger.warning("Empty filtered audio data, adding padding")
+                x_filt = np.zeros(int(Fs * 0.1), dtype=np.float32)  # TEST: Add 100ms of silence as padding
+            with patch("scipy.fftpack.fft", new=self.safe_fft):
+                features = mid_feature_extraction(signal=x_filt,
+                                                  sampling_rate=Fs,
+                                                  mid_window=1.0,
+                                                  mid_step=0.5,
+                                                  short_window=0.05,
+                                                  short_step=0.05)
             if not features or not isinstance(features, tuple) or len(features) < 2:
                 raise ValueError("Feature extraction failed")
             mid_term_features = features[0]
