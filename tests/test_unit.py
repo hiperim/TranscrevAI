@@ -111,7 +111,7 @@ class TestAudioRecorder:
                     mock_stream.return_value = mock_stream_instance
                     await self._recorder.start_recording()
                     await asyncio.sleep(1.5)
-            frames_copy = self._recorder._frames.copy()
+            frames_copy = self._recorder._frames.copy() 
             await self._recorder.stop_recording()
             if sys.platform == "win32":
                 validated = False
