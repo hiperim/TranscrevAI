@@ -345,7 +345,12 @@ class TestFullPipeline():
     @patch("src.transcription.Model")
     @patch("src.transcription.transcribe_audio_with_progress")
     async def test_recording_to_subtitles(self, mock_transcribe, mock_model, generate_test_audio): 
-        mock_transcribe.return_value = [(100, [{"text": "Test transcription", "start": 0.0, "end": 2.0}])]
+
+        async def mock_generator(audio_file, model_path, language_code):
+            yield 100, [{"text": "Test transcription", "start": 0.0, "end": 2.0}]
+        
+        # Set the mock to return async mock_generator()
+        mock_transcribe.side_effect = mock_generator
         temp_dir = tempfile.mkdtemp()
         try:
             audio_file = generate_test_audio(duration=2.0, speakers=2)
@@ -356,7 +361,8 @@ class TestFullPipeline():
                 diarizer = SpeakerDiarization()
                 segments = await diarizer.diarize_audio(str(audio_file))
                 transcription = []
-                async for _, result in transcribe_audio_with_progress(str(audio_file), "mock_model_path", "en"):
+                # This will call func. mock_generator
+                async for _, result in mock_transcribe(str(audio_file), "mock_model_path", "en"):
                     transcription.extend(result)
                 await generate_srt(transcription, segments, str(srt_file))
                 assert srt_file.exists()
