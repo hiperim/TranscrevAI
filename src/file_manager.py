@@ -219,7 +219,7 @@ class FileManager():
                 return model_path
             except Exception as e:
                 logger.error(f"Model download failed on attempt {attempt + 1}: {e}")
-                time.sleep(2 * (attempt + 1))
+                time.sleep(2 * (attempt + 1)) 
         if os.path.exists(zip_path):
             os.remove(zip_path)
             raise RuntimeError(f"Failed to download and extract model")
