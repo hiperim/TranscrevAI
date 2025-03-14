@@ -123,11 +123,11 @@ class AtomicAudioFile:
     def _kill_all_handles(self, temp_path, final_path):
         # Windows-specific handle cleanup
         try:
-            subprocess.run(["powershell", f"Get-Process * | Where-Object {{ "f"(Get-Process $_.Id).Modules.FileName -match '{temp_path.name}' -or "f"(Get-Process $_.Id).Modules.FileName -match '{final_path.name}' "f"}} | Stop-Process -Force -ErrorAction SilentlyContinue"], shell=True, check=False, creationflags=subprocess.CREATE_NO_WINDOW)
+            subprocess.run(["powershell", f"Get-Process *ffmpeg*,*ffprobe* | Where-Object {{ "f"($_.Path -like '*{temp_path.name}*') -or "f"($_.Path -like '*{final_path.name}*') "f"}} | Stop-Process -Force -ErrorAction SilentlyContinue"], shell=True, check=False, creationflags=subprocess.CREATE_NO_WINDOW)
             # Close explorer handles without restarting
             # Yet to try (right below):
             # subprocess.run(["powershell", "$handleCloser = Add-Type -PassThru -TypeDefinition 'using System; using System.Runtime.InteropServices; public class HandleCloser { [DllImport(\"kernel32.dll\", SetLastError = true)] public static extern bool CloseHandle(IntPtr handle); }'; foreach ($proc in Get-Process explorer) { try { [void][HandleCloser]::CloseHandle($proc.Handle) } catch {} }"], shell=True, check=False)
-            subprocess.run(["powershell", "Get-Process explorer | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object { $_.Refresh(); $_.CloseMainWindow() | Out-Null }"], shell=True, check=False)
+            subprocess.run(["powershell", "Get-Process explorer | Where-Object {$_.MainWindowHandle -ne 0} | ForEach-Object {$_.Refresh(); if ($_.Responding) {$_.CloseMainWindow() | Out-Null}}"], shell=True, check=False)
         except Exception as e:
             logger.debug(f"Cleanup error: {e}")
 

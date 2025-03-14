@@ -50,18 +50,25 @@ class AsyncTestCase(unittest.IsolatedAsyncioTestCase):
         await super().asyncTearDown()
         temp_dir = FileManager.get_data_path("temp")
         if sys.platform == "win32":
-            for proc in psutil.process_iter():
+            for proc in psutil.process_iter(["pid", "name"]):
                 try:
-                    if "ffmpeg" in proc.name().lower():
+                    if "ffmpeg" in proc.info["name"].lower():
                         proc.kill()
-                except psutil.NoSuchProcess:
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
             await asyncio.sleep(1)
         cutoff = time.time() - 300 # only remove files older than current test   # 5min. safety window
-        for f in os.listdir(temp_dir):
-            file_path = Path(temp_dir) / f
-            if file_path.stat().st_mtime < cutoff:
-                await TestPerformance.safe_remove(file_path)
+        try:
+            for f in os.listdir(temp_dir):
+                file_path = Path(temp_dir) / f
+                try:
+                    if file_path.stat().st_mtime < cutoff:
+                        await TestPerformance.safe_remove(file_path)
+                except (PermissionError, OSError):
+                    # Skip inaccessible files 
+                    continue
+        except Exception as e:
+            logger.warning(f"Temp cleanup error: {e}")
 
 class TestAudioRecorder:
     @pytest.fixture(scope="function", autouse=True)
@@ -232,6 +239,7 @@ class TestAudioRecorder:
                 await self._recorder.start_recording()
                 source_duration = AudioRecorder.get_audio_duration(str(source_file))
                 await asyncio.sleep(source_duration + 0.5)  # Buffer to ensure data is processed
+                frames_copy = self._recorder._frames.copy()
                 await self._recorder.stop_recording()
                 if sys.platform == "win32":
                     validated = False
@@ -244,7 +252,7 @@ class TestAudioRecorder:
                                 result = subprocess.run(cmd, capture_output=True, text=True)
                                 if result.returncode == 0:
                                     converted_duration = float(result.stdout.strip())
-                                    source_duration = sum(frame.shape[0] for frame in self._recorder._frames) / self._recorder.sample_rate
+                                    source_duration = sum(frame.shape[0] for frame in frames_copy) / self._recorder.sample_rate
                                     if abs(source_duration - converted_duration) <= 0.15:
                                         validated = True
                                         break
@@ -253,11 +261,13 @@ class TestAudioRecorder:
                             await asyncio.sleep(0.25)
                         except Exception as e:
                             logger.warning(f".mp4 validation attempt {_} failed: {str(e)}")
-                            subprocess.run(["powershell", "Get-Process *ffmpeg* | Stop-Process -Force"], shell=True, check=False)
+                            # Before:
+                            # subprocess.run(["powershell", "Get-Process *ffmpeg* | Stop-Process -Force"], shell=True, check=False)
+                            subprocess.run(["powershell", f"Get-Process *ffmpeg* | Where-Object {{$_.Path -like '*{output_path.name}*'}} | Stop-Process -Force"], shell=True, check=False)
                     if not validated:
                         pytest.fail(f"MP4 validation failed after 60 attempts. Duration: {converted_duration if 'converted_duration' in locals() else 'N/A'}")
             converted_duration = float(result.stdout.strip())
-            source_duration = sum(frame.shape[0] for frame in self._recorder._frames) / self._recorder.sample_rate
+            source_duration = sum(frame.shape[0] for frame in frames_copy) / self._recorder.sample_rate
             assert abs(source_duration - converted_duration) <= 0.15, \
                 f"Duration mismatch: {source_duration:.1f}s vs. {converted_duration:.1f}s"
         finally:
