@@ -76,7 +76,7 @@ class TestAudioRecorder:
         self.audio_dir = temp_path / "audio"
         self.audio_dir.mkdir(parents=True, exist_ok=True)
         self._recorder = None
-        with patch('src.file_manager.FileManager.get_data_path') as mock_path:
+        with patch("src.file_manager.FileManager.get_data_path") as mock_path:
             mock_path.return_value = str(self.audio_dir)
             yield
         if self._recorder and self._recorder.is_recording:
@@ -88,8 +88,8 @@ class TestAudioRecorder:
 
     @pytest.fixture
     def mock_android(self):
-        with patch('src.file_manager.FileManager.is_mobile', return_value=True), \
-             patch('src.file_manager.FileManager.get_data_path', return_value="/mock/path"):
+        with patch("src.file_manager.FileManager.is_mobile", return_value=True), \
+             patch("src.file_manager.FileManager.get_data_path", return_value="/mock/path"):
             yield Mock()
 
     @pytest.mark.asyncio
@@ -162,7 +162,7 @@ class TestAudioRecorder:
             await asyncio.sleep(0.5)  # Cleanup delay
 
     async def _windows_file_validation(self, path):
-        """Windows-specific file checks with handle verification"""
+        # Windows-specific file checks with handle verification
         for _ in range(10):
             if not Path(path).exists():
                 logger.warning(f"File {path} no longer exists")
@@ -180,7 +180,7 @@ class TestAudioRecorder:
         pytest.fail("File validation failed after 10 attempts")
 
     async def _windows_process_cleanup(self, output_path):
-        #Enhanced Windows cleanup
+        # Enhanced Windows cleanup
         if output_path is None:
             logger.warning("No output path provided for cleanup")
             return
@@ -305,7 +305,7 @@ class TestDiarization():
     async def test_speaker_identification(self, generate_test_audio):
         test_file = generate_test_audio(duration=10.0, speakers=2)
         try:
-            with patch('pyAudioAnalysis.audioSegmentation.speaker_diarization') as mock_diarize:
+            with patch("pyAudioAnalysis.audioSegmentation.speaker_diarization") as mock_diarize:
                 mock_diarize.return_value = (np.array([0,1]), [], [], 2)
                 diarizer = SpeakerDiarization()
                 segments = await diarizer.diarize_audio(str(test_file))
@@ -337,16 +337,15 @@ class TestSubtitles():
 
 class TestFullPipeline():
     @pytest.mark.timeout(30)
-    @patch('src.transcription.Model')
-    @patch('src.transcription.transcribe_audio_with_progress')
+    @patch("src.transcription.Model")
+    @patch("src.transcription.transcribe_audio_with_progress")
     async def test_recording_to_subtitles(self, mock_transcribe, generate_test_audio): # Parameter "mock_model" (before generate_test_audio) removed. Yet to test.
         mock_transcribe.return_value = [(100, [{"text": "Test transcription", "start": 0.0, "end": 2.0}])]
         temp_dir = tempfile.mkdtemp()
         try:
             audio_file = generate_test_audio(duration=2.0, speakers=2)
             srt_file = Path(temp_dir) / "output.srt"
-            
-            with patch('src.speaker_diarization.SpeakerDiarization.diarize_audio') as mock_diarize:
+            with patch("src.speaker_diarization.SpeakerDiarization.diarize_audio") as mock_diarize:
                 mock_diarize.return_value = [{"start": 0.0, "end": 1.0, "speaker": "S1"},
                                              {"start": 1.0, "end": 2.0, "speaker": "S2"}]
                 diarizer = SpeakerDiarization()
@@ -359,13 +358,13 @@ class TestFullPipeline():
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
-class TestPerformance(AsyncTestCase):
+class TestPerformance():
     @pytest.mark.asyncio
     @pytest.mark.timeout(30)
     async def test_diarization_latency(self, generate_test_audio):
         test_file = generate_test_audio(duration=10, speakers=2)
         try:
-            with patch('src.speaker_diarization.SpeakerDiarization._diarize') as mock_diarize:
+            with patch("src.speaker_diarization.SpeakerDiarization._diarize") as mock_diarize:
                 mock_diarize.return_value = [{"start": 0, "end": 5, "speaker": "S1"}]
                 diarizer = SpeakerDiarization()
                 start_time = time.monotonic()
