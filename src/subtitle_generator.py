@@ -12,9 +12,16 @@ async def generate_srt(transcription_data, diarization_segments, filename="outpu
     try:
         if not transcription_data or not isinstance(diarization_segments, list):
             raise ValueError("Missing required input data")
-        output_dir = FileManager.get_data_path("transcripts")
-        unique_name = f"{filename.split('.')[0]}_{int(time.time())}.srt"
-        output_path = os.path.join(output_dir, unique_name)
+        # If filename contains directory path, use provided path
+        dirname = os.path.dirname(filename)
+        if dirname:
+            output_path = filename
+            os.makedirs(dirname, exist_ok=True)
+        # If plain filename, use default directory
+        else:
+            output_dir = FileManager.get_data_path("transcripts")
+            unique_name = f"{filename.split('.')[0]}_{int(time.time())}.srt"
+            output_path = os.path.join(output_dir, unique_name)
         combined_segments = []
         with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as tmp:
             temp_path = tmp.name

@@ -306,7 +306,7 @@ class TestDiarization():
         test_file = generate_test_audio(duration=10.0, speakers=2)
         try:
             with patch("src.speaker_diarization.SpeakerDiarization._diarize") as mock_diarize:
-                mock_diarize.return_value = mock_diarize.return_value = [{"start": 0.0, "end": 1.0, "speaker": "S1"}, {"start": 1.0, "end": 2.0, "speaker": "S2"}]
+                mock_diarize.return_value = mock_diarize.return_value = [{"start": 0.0, "end": 1.0, "speaker": "Speaker_1"}, {"start": 1.0, "end": 2.0, "speaker": "Speaker_2"}]
                 diarizer = SpeakerDiarization()
                 segments = await diarizer.diarize_audio(str(test_file))
                 unique_speakers = {s["speaker"] for s in segments}
@@ -328,14 +328,14 @@ class TestSubtitles():
         Path(temp_dir).mkdir(parents=True, exist_ok=True)
         output_path = Path(temp_dir) / "test.srt"
         try:
-            test_segments = [{"start": 0.0, "end": 1.0, "speaker": "S1"}, {"start": 1.5, "end": 2.5, "speaker": "S2"}]
-            test_transcription = [{"start": 0.2, "end": 0.8, "text": "Test 1"}, {"start": 1.6, "end": 2.2, "text": "Test 2"}]
+            test_segments = [{"start": 0.0, "end": 1.0, "speaker": "Speaker_1"}, {"start": 1.5, "end": 2.5, "speaker": "Speaker_2"}]
+            test_transcription = [{"start": 0.2, "end": 0.8, "text": "Test_1"}, {"start": 1.6, "end": 2.2, "text": "Test_2"}]
             await generate_srt(test_transcription, test_segments, str(output_path))
             assert output_path.exists()
             async with aiofiles.open(output_path, "r") as f:
                 content = await f.read()
-                assert "Speaker_S1" in content
-                assert "Test 1" in content
+                assert "Speaker_Speaker_1" in content
+                assert "Test_1" in content
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -351,8 +351,8 @@ class TestFullPipeline():
             audio_file = generate_test_audio(duration=2.0, speakers=2)
             srt_file = Path(temp_dir) / "output.srt"
             with patch("src.speaker_diarization.SpeakerDiarization.diarize_audio") as mock_diarize:
-                mock_diarize.return_value = [{"start": 0.0, "end": 1.0, "speaker": "S1"},
-                                             {"start": 1.0, "end": 2.0, "speaker": "S2"}]
+                mock_diarize.return_value = [{"start": 0.0, "end": 1.0, "speaker": "Speaker_1"},
+                                             {"start": 1.0, "end": 2.0, "speaker": "Speaker_2"}]
                 diarizer = SpeakerDiarization()
                 segments = await diarizer.diarize_audio(str(audio_file))
                 transcription = []
@@ -370,7 +370,7 @@ class TestPerformance():
         test_file = generate_test_audio(duration=10, speakers=2)
         try:
             with patch("src.speaker_diarization.SpeakerDiarization._diarize") as mock_diarize:
-                mock_diarize.return_value = [{"start": 0, "end": 5, "speaker": "S1"}]
+                mock_diarize.return_value = [{"start": 0, "end": 5, "speaker": "Speaker_1"}]
                 diarizer = SpeakerDiarization()
                 start_time = time.monotonic()
                 await diarizer.diarize_audio(str(test_file))
