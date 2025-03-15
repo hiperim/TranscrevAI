@@ -10,7 +10,7 @@ android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.api = 31
 android.minapi = 23
 android.ndk = 19c
-android.arch = arm64-v8a
+android.arch = armeabi-v7a arm64-v8a
 android.allow_backup = True
 
 # (str) Title of your application
