@@ -10,6 +10,7 @@ import time
 import stat
 import subprocess
 from ctypes import windll
+import psutil
 from unittest.mock import Mock, patch
 from src.logging_setup import setup_app_logging
 from src.file_manager import FileManager, ANDROID_ENABLED
@@ -64,12 +65,24 @@ def temp_path(tmp_path_factory):
     if test_temp.exists():
         if sys.platform == "win32":
             try:
-                from ctypes import windll, wintypes
+                # Kill process w/ open handles on test directory
+                for proc in psutil.process_iter(["pid", "name"]):
+                    try:
+                        if any(x in proc.name().lower() for x in ["ffmpeg", "ffprobe", "python"]):
+                            # Check if process has handles on test directory
+                            proc_files = proc.open_files()
+                            if any(str(test_temp) in f.path for f in proc_files):
+                                logger.info(f"Terminating process {proc.pid} holding test files")
+                                proc.kill()
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        continue
                 import win32security
-                # Reset permissions on each test run
+                # Reset NTFS permissions on each test run
                 secdec = win32security.SECURITY_DESCRIPTOR()
                 secdec.SetSecurityDescriptorOwner(win32security.ConvertStringSidToSid("S-1-1-0"), False)
                 win32security.SetNamedSecurityInfo(str(test_temp), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION, None, None, None, None)
+                # Wait for system handle release
+                time.sleep(0.5)
             except ImportError:
                 pass
         if FileManager.is_mobile() and ANDROID_ENABLED:
@@ -81,25 +94,42 @@ def temp_path(tmp_path_factory):
                 raise PermissionError("Android storage permission not granted")
         # Cross-platform forced removal
         shutil.rmtree(test_temp, ignore_errors=True)
+    test_temp.mkdir(exist_ok=True)
     yield test_temp
-    
-    # Unified cleanup using python standard library
-    def on_remove_error(func, path, exc_info):
+    # Cleanup after yield
+    if sys.platform == "win32":
+        # Give processes time to finish operations
+        time.sleep(0.5)
+        # Terminate any processes still holding files
+        for proc in psutil.process_iter(['pid', 'name']):
+            try:
+                proc_files = proc.open_files()
+                if any(str(test_temp) in f.path for f in proc_files):
+                    logger.debug(f"Test cleanup: Terminating process {proc.pid}")
+                    proc.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+    # Unified cleanup using python std. library
+    def on_rm_error(func, path, exc_info):
+        # Make read-only files writable and retry
         os.chmod(path, stat.S_IWRITE)
-        func(path)
-
-    for _ in range(3):
         try:
-            shutil.rmtree(test_temp, onerror=on_remove_error)
+            func(path)
+        except:
+            # If still can't remove, skip instead of failing
+            logger.debug(f"Couldn't remove {path}")
+    for attempt in range(5):
+        try:
+            shutil.rmtree(test_temp, onerror=on_rm_error)
             break
         except Exception as e:
+            logger.debug(f"Cleanup attempt {attempt+1} failed: {e}, waiting {wait_time}s")
+            if sys == "win32":
+                wait_time = 0.5
             if FileManager.is_mobile() and ANDROID_ENABLED:
-                # for compatibility with android media scanner (might hold files briefly)
-                time.sleep(2 ** _)
-            else:
-                time.sleep(0.5 * _)
+                wait_time = 2
+            time.sleep(wait_time)
     test_temp.mkdir(exist_ok=True)
-
 
 @pytest.fixture
 def mock_paths(monkeypatch):
