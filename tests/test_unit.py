@@ -71,6 +71,21 @@ class AsyncTestCase(unittest.IsolatedAsyncioTestCase):
             logger.warning(f"Temp cleanup error: {e}")
 
 class TestAudioRecorder:
+    def cleanup_audio_processes(self):
+    # Ensure all audio procs. are terminated
+        if sys.platform == "win32":
+            try:
+                # Kill ffmpeg procs.
+                for proc in psutil.process_iter(["pid", "name"]):
+                    try:
+                        if any(x in proc.name().lower() for x in ["ffmpeg", "ffprobe"]):
+                            logger.debug(f"Terminating audio process {proc.pid}")
+                            proc.kill()
+                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                        continue
+            except Exception as e:
+                logger.debug(f"Audio process cleanup error: {e}")
+
     @pytest.fixture(scope="function", autouse=True)
     def setup_method(self, temp_path):
         self.audio_dir = temp_path / "audio"

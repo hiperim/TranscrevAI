@@ -216,6 +216,26 @@ class AudioRecorder:
         except Exception as e:
             logger.critical(f"FFmpeg setup error: {e}")
             raise RuntimeError("FFmpeg is not installed or not configured correctly.")
+    
+    def __del__(self):
+    # Explicit cleanup of resources when recorder is terminated
+        try:
+            if hasattr(self, "_stream") and self._stream:
+                self._stream.close()
+            # Kill any associated proc.
+            if sys.platform == "win32" and hasattr(self, "output_file"):
+                try:
+                    for proc in psutil.process_iter(['pid', 'name']):
+                        try:
+                            if any(x in proc.name().lower() for x in ['ffmpeg', 'ffprobe']):
+                                logger.debug(f"Terminating audio process {proc.pid}")
+                                proc.kill()
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            pass
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     def get_temp_path(self, extension=".wav"):
         temp_dir = FileManager.get_data_path("temp")
