@@ -58,78 +58,135 @@ def generate_test_audio():
 
 @pytest.fixture
 def temp_path(tmp_path_factory):
-    # Cross-platform compatible temporary directory fixture
+    """Cross-platform compatible temporary directory fixture with enhanced Windows cleaning"""
     base_temp = tmp_path_factory.getbasetemp()
     test_temp = base_temp / "test_audio"
-    # Remove existing directory first
+        # Remove existing directory first with proper Windows handling
     if test_temp.exists():
         if sys.platform == "win32":
             try:
-                # Kill process w/ open handles on test directory
-                for proc in psutil.process_iter(["pid", "name"]):
+                # Terminate all processes that might have handles to our test directory
+                for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
                     try:
-                        if any(x in proc.name().lower() for x in ["ffmpeg", "ffprobe", "python"]):
-                            # Check if process has handles on test directory
-                            proc_files = proc.open_files()
-                            if any(str(test_temp) in f.path for f in proc_files):
-                                logger.info(f"Terminating process {proc.pid} holding test files")
-                                proc.kill()
+                        # Check if process has any relation to our test directory
+                        proc_info = proc.as_dict(attrs=['pid', 'name', 'cmdline', 'open_files'])
+                        proc_name = proc_info['name'].lower() if proc_info['name'] else ""
+                        audio_related = any(x in proc_name for x in ['ffmpeg', 'ffprobe', 'python', 'soundfile', 'audio'])
+                        if audio_related:
+                            try:
+                                open_files = proc.open_files()
+                                if any(str(test_temp) in f.path for f in open_files):
+                                    logger.info(f"Terminating process {proc.pid} ({proc_name}) holding test files")
+                                    proc.kill()
+                            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                                pass
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         continue
-                import win32security
-                # Reset NTFS permissions on each test run
-                secdec = win32security.SECURITY_DESCRIPTOR()
-                secdec.SetSecurityDescriptorOwner(win32security.ConvertStringSidToSid("S-1-1-0"), False)
-                win32security.SetNamedSecurityInfo(str(test_temp), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION, None, None, None, None)
-                # Wait for system handle release
-                time.sleep(0.5)
-            except ImportError:
-                pass
-        if FileManager.is_mobile() and ANDROID_ENABLED:
-            from jnius import autoclass
-            Context = autoclass("android.content.Context")
-            activity = autoclass("org.kivy.android.PythonActivity").mActivity
-            # Verify storage permissions
-            if AudioRecorder.ContextCompat.checkSelfPermission(activity, AudioRecorder.Manifest.permission.WRITE_EXTERNAL_STORAGE) != AudioRecorder.PackageManager.PERMISSION_GRANTED:
-                raise PermissionError("Android storage permission not granted")
-        # Cross-platform forced removal
-        shutil.rmtree(test_temp, ignore_errors=True)
-    test_temp.mkdir(exist_ok=True)
-    yield test_temp
-    # Cleanup after yield
-    if sys.platform == "win32":
-        # Give processes time to finish operations
-        time.sleep(0.5)
-        # Terminate any processes still holding files
-        for proc in psutil.process_iter(['pid', 'name']):
+                # Use more robust Windows API for permission reset
+                try:
+                    import win32security
+                    import win32con
+                    import win32file
+                    # Set directory as not read-only
+                    for root, dirs, files in os.walk(str(test_temp)):
+                        for dir in dirs:
+                            dir_path = os.path.join(root, dir)
+                            try:
+                                # Remove read-only attribute
+                                win32file.SetFileAttributes(dir_path, win32file.FILE_ATTRIBUTE_NORMAL)
+                            except Exception:
+                                pass
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            try:
+                                # Remove read-only attribute
+                                win32file.SetFileAttributes(file_path, win32file.FILE_ATTRIBUTE_NORMAL)
+                            except Exception:
+                                pass
+                    # Give everyone full control of the directory
+                    everyone_sid = win32security.ConvertStringSidToSid("S-1-1-0")  # Everyone SID
+                    security_descriptor = win32security.SECURITY_DESCRIPTOR()
+                    dacl = win32security.ACL()
+                    dacl.AddAccessAllowedAce(win32security.ACL_REVISION, win32con.GENERIC_ALL, everyone_sid)
+                    security_descriptor.SetSecurityDescriptorDacl(1, dacl, 0)
+                    # Apply to directory and all subdirectories
+                    win32security.SetFileSecurity(str(test_temp), win32security.DACL_SECURITY_INFORMATION, security_descriptor)
+                except ImportError:
+                    logger.warning("Win32 security modules not available")
+                # Wait for windows to release handles
+                time.sleep(2.0)
+                # Force flush windows filesystem cache
+                try:
+                    subprocess.run(["cmd", "/c", "echo > NUL"], shell=True, check=False)
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.warning(f"Windows directory prep failed: {e}")
+        # Multiple attempts for directory removal
+        for attempt in range(5):
             try:
-                proc_files = proc.open_files()
-                if any(str(test_temp) in f.path for f in proc_files):
-                    logger.debug(f"Test cleanup: Terminating process {proc.pid}")
-                    proc.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                continue
-    # Unified cleanup using python std. library
+                shutil.rmtree(test_temp, ignore_errors=True)
+                break
+            except Exception as e:
+                wait_time = 0.5 * (2 ** attempt)  # Exponential backoff
+                logger.debug(f"Directory removal attempt {attempt+1} failed: {e}, waiting {wait_time}s")
+                time.sleep(wait_time)
+    # Ensure directory exists
+    test_temp.mkdir(parents=True, exist_ok=True)
+    # Add special handling for windows permissions for new directory
+    if sys.platform == "win32":
+        try:
+            # Ensure exists directory with known good permissions
+            os.chmod(test_temp, 0o777)
+        except Exception as e:
+            logger.debug(f"Permission setting error: {e}")
+    yield test_temp
+    # Enhanced cleanup after yield
+    if sys.platform == "win32":
+        # Ensure all audio processes are terminated
+        try:
+            subprocess.run(["taskkill", "/F", "/IM", "ffmpeg.exe", "/IM", "ffprobe.exe", "/T"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        except Exception:
+            pass
+        # Wait for windows to release handles
+        time.sleep(2.0)
+        # Multiple strategies for cleanup
+        try:
+            # Force directory handle closure with robocopy empty trick
+            temp_empty = tmp_path_factory.getbasetemp() / f"empty_{int(time.time())}"
+            temp_empty.mkdir(exist_ok=True)
+            try:
+                # Use robocopy to mirror an empty directory (deletes content)
+                subprocess.run(["robocopy", str(temp_empty), str(test_temp), "/MIR", "/NFL", "/NDL", "/NJH", "/NJS", "/NC", "/NS", "/NP"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            except Exception:
+                pass
+            # Remove empty directory
+            try:
+                temp_empty.rmdir()
+            except Exception:
+                pass
+        except Exception as e:
+            logger.debug(f"Advanced cleanup error: {e}")
+    # Recursive error handler on final cleanup
     def on_rm_error(func, path, exc_info):
         # Make read-only files writable and retry
         os.chmod(path, stat.S_IWRITE)
         try:
             func(path)
-        except:
-            # If still can't remove, skip instead of failing
-            logger.debug(f"Couldn't remove {path}")
-    for attempt in range(5):
-        try:
-            shutil.rmtree(test_temp, onerror=on_rm_error)
-            break
-        except Exception as e:
-            logger.debug(f"Cleanup attempt {attempt+1} failed: {e}, waiting {wait_time}s")
-            if sys == "win32":
-                wait_time = 0.5
-            if FileManager.is_mobile() and ANDROID_ENABLED:
-                wait_time = 2
-            time.sleep(wait_time)
-    test_temp.mkdir(exist_ok=True)
+        except Exception:
+            # Last resort: try to use the shell to delete
+            if sys.platform == "win32":
+                try:
+                    subprocess.run(["cmd", "/c", f"rd /s /q \"{path}\""], shell=True, check=False)
+                except Exception:
+                    logger.debug(f"Failed to remove {path}")
+            else:
+                logger.debug(f"Failed to remove {path}")
+    # Final cleanup
+    try:
+        shutil.rmtree(test_temp, onerror=on_rm_error)
+    except Exception as e:
+        logger.debug(f"Final cleanup failed: {e}")
 
 @pytest.fixture
 def mock_paths(monkeypatch):
