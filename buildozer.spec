@@ -7,9 +7,9 @@ source.include_exts = py,png,jpg,kv,atlas,json,wav,zip
 version = 0.1
 requirements = python3,kivy,toga,androidstorage4kivy,pyjnius,numpy,scipy,vosk,pyaudioanalysis,soundfile,sounddevice,static_ffmpeg,librosa,aiofiles,psutil
 android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-android.api = 29
+android.api = 31
 android.minapi = 23
-android.ndk = 21e
+android.ndk = 19c
 android.arch = arm64-v8a
 android.allow_backup = True
 
