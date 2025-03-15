@@ -57,6 +57,7 @@ class TranscrevAI(toga.App):
         await self.main_window.app._impl.loop.run_in_executor(None, lambda: None)
 
     async def process_tasks(self):
+        # Process all pipelined tasks
         while True:
             task = await self.processing_pipeline.get()
             try:
@@ -103,7 +104,7 @@ class TranscrevAI(toga.App):
             raise
     
     async def _perform_transcription(self, task):
-        """Handle transcription pipeline tasks"""
+        # Handle transcription pipeline tasks
         try:
             logger.info(f"Starting transcription for {task['language']}")
             async for progress, transcription_data in transcribe_audio_with_progress(self.recorder.wav_file, task['model'], task['language']):
@@ -122,7 +123,7 @@ class TranscrevAI(toga.App):
             raise
 
     async def _perform_diarization(self, task):
-        """Handle diarization pipeline tasks"""
+        # Handle diarization pipeline tasks
         try:
             logger.info("Starting diarization processing")
             diarizer = SpeakerDiarization()
@@ -137,7 +138,6 @@ class TranscrevAI(toga.App):
             raise
 
     def pause_recording(self, widget):
-        """Handle recording pause"""
         if not self.recorder.is_recording:
             logger.warning("Cannot pause inactive recording")
             return
@@ -146,7 +146,6 @@ class TranscrevAI(toga.App):
         self.diarization_progress.value = 0
 
     async def stop_recording(self, widget):
-        """Handle full recording stop"""
         if not self.recorder.is_recording:
             logger.warning("Cannot stop inactive recording")
             return
@@ -177,13 +176,13 @@ class TranscrevAI(toga.App):
             return False
 
     def main(self):
-        """Entry point with async context validation"""
+        # Entry point with async context validation
         if not asyncio.get_event_loop().is_running():
             asyncio.run(self.main_async())
         return TranscrevAI("TranscrevAI", "org.transcrevai")
 
     async def main_async(self):
-        """Async entry point"""
+        # Async entry point
         await self.startup()
 
 if __name__ == "__main__":
