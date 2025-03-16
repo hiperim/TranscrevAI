@@ -179,7 +179,7 @@ class TranscrevAI(toga.App):
         # Entry point with async context validation
         if not asyncio.get_event_loop().is_running():
             asyncio.run(self.main_async())
-        return TranscrevAI("TranscrevAI", "org.transcrevai")
+        return TranscrevAI("TranscrevAI", "com.transcrevai") # was org.transcrevai before
 
     async def main_async(self):
         # Async entry point
