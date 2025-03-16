@@ -152,7 +152,7 @@ fullscreen = 0
 # android.accept_sdk_license = False
 
 # (str) Android entry point, default is ok for Kivy-based app
-#android.entrypoint = org.kivy.android.PythonActivity
+android.entrypoint = org.transcrevai.PermissionActivity
 
 # (str) Full name including package path of the Java class that implements Android Activity
 # use that parameter together with android.entrypoint to set custom Java class instead of PythonActivity
@@ -190,7 +190,7 @@ fullscreen = 0
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src =
+android.add_src = src
 
 # (list) Android AAR archives to add
 #android.add_aars =
@@ -239,7 +239,7 @@ fullscreen = 0
 #android.add_packaging_options =
 
 # (list) Java classes to add as activities to the manifest.
-#android.add_activities = com.example.ExampleActivity
+android.add_activities = org.transcrevai.PermissionActivity
 
 # (str) OUYA Console category. Should be one of GAME or APP
 # If you leave this blank, OUYA support will not be enabled
