@@ -9,10 +9,10 @@ from src.audio_processing import AudioRecorder
 from src.transcription import transcribe_audio_with_progress
 from src.speaker_diarization import SpeakerDiarization
 from src.subtitle_generator import generate_srt
-from src.file_manager import FileManager
+from src.file_manager import FileManager, ANDROID_ENABLED
 from toga.style import Pack
 from toga.style.pack import COLUMN
-from config.app_config import MODEL_DIR 
+from config.app_config import MODEL_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +23,25 @@ class TranscrevAI(toga.App):
     async def startup(self):
         self.processing_pipeline = asyncio.Queue()
         self.worker_task = asyncio.create_task(self.process_tasks())
-        FileManager.ensure_directory_exists(FileManager.get_data_path("inputs"))
-        FileManager.ensure_directory_exists(FileManager.get_data_path("processed"))
-        FileManager.ensure_directory_exists(FileManager.get_data_path("transcripts"))
+        if FileManager.is_mobile() and ANDROID_ENABLED:
+            try:
+                from src.file_manager import PermissionManager
+                # Request all required permissions upfront
+                audio_task = asyncio.create_task(PermissionManager.request_audio_permission())
+                storage_task = asyncio.create_task(PermissionManager.request_storage_permissions())
+                # Wait for permissions
+                await asyncio.wait([audio_task, storage_task], timeout=10)
+                # Check results
+                if not audio_task.result():
+                    logger.warning("Audio permission denied during startup")
+                if not storage_task.result():
+                    logger.warning("Storage permission denied during startup")
+            except Exception as e:
+                logger.error(f"Permission request during startup failed: {e}")
+        # Async version to ensure permissions are requested
+        await FileManager.get_data_path_async("inputs")
+        await FileManager.get_data_path_async("processed")
+        await FileManager.get_data_path_async("transcripts")
         self.recorder = AudioRecorder()
         self.processing_lock = RLock()
         # UI 
