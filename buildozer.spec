@@ -7,7 +7,7 @@ title = TranscrevAI
 package.name = transcrevai
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = com.transcrevai
+package.domain = com.transcrevai.app
 
 # (str) Source code where the main.py live
 source.dir = .
