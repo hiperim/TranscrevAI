@@ -312,53 +312,31 @@ class AudioRecorder:
             self.is_android_recording = True
 
         except Exception as e:
-            error_msg = f"Failed to start Android recording: {str(e)}"
+            error_msg = f"Failed to start android recording: {str(e)}"
             logger.error(error_msg)
             self.is_android_recording = False
             raise AudioProcessingError(error_msg, AudioProcessingError.ErrorType.RECORDING_FAILED)
         
     async def _check_android_permissions(self):
-        # Check if the app has permission to record audio on Android
+        # Check if the app has permission to record audio on android
         try:
-            from jnius import autoclass
-            Activity = autoclass("org.kivy.android.PythonActivity")
-            current_activity = Activity.mActivity
-            ContextCompat = autoclass("androidx.core.content.ContextCompat")
-            PackageManager = autoclass("android.content.pm.PackageManager")
-            Manifest = autoclass("android.Manifest$permission")
-            ActivityCompat = autoclass("androidx.core.app.ActivityCompat")
-            Build = autoclass("android.os.Build")
-            # Define permission needed
-            permission = Manifest.RECORD_AUDIO
-            # Check if already granted
-            permission_granted = ContextCompat.checkSelfPermission(current_activity, permission) == PackageManager.PERMISSION_GRANTED
-            if not permission_granted and Build.VERSION.SDK_INT >= 23:
-                logger.info("Requesting permission from user")
-                # In case user denies, show rationale (explanation to user why it needs permission)
-                show_rationale = ActivityCompat.shouldShowRequestPermissionRationale(current_activity, permission)
-                if show_rationale:
-                    # Explanation to user
+            from src.file_manager import PermissionManager
+            # Request permission and wait for result
+            permission_granted = await PermissionManager.request_audio_permission()
+            if not permission_granted:
+                try:
+                    from jnius import autoclass
+                    Activity = autoclass("org.kivy.android.PythonActivity")
                     Toast = autoclass("android.widget.Toast")
-                    toast_message = "Microphone permission is required for audio recording"
+                    current_activity = Activity.mActivity
+                    toast_message = "Recording permission denied. Recording unavailable."
                     toast = Toast.makeText(current_activity, toast_message, Toast.LENGTH_LONG)
                     toast.show()
-                    await asyncio.sleep(1)  # Time for user to read
-                # Request permission
-                permissions = [permission] # List format
-                REQUEST_AUDIO_PERMISSION = 1 # Request code
-                ActivityCompat.requestPermissions(current_activity, permissions, REQUEST_AUDIO_PERMISSION)
-                for _ in range(10):  # 0.5s delays = 10s total  
-                    await asyncio.sleep(0.5)
-                    permission_granted = ContextCompat.checkSelfPermission(current_activity, permission) == PackageManager.PERMISSION_GRANTED
-                    if permission_granted:
-                        logger.info("Recording permission granted by user")
-                        break
-                if not permission_granted:
-                    logger.error("Recording permission not granted after request")
-                    return False
+                except Exception as e:
+                    logger.error(f"Error showing toast: {e}")
             return permission_granted
         except Exception as e:
-            logger.error(f"Error checking Android permissions: {e}")
+            logger.error(f"Error checking android permissions: {e}")
             return False
             
     def _audio_callback(self, indata, frames, time, status):
