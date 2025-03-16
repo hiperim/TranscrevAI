@@ -274,8 +274,16 @@ class AudioRecorder:
 
     async def _start_android_recording(self):
         if not await self._check_android_permissions():
+            # Show message to user about missing permissions
+            from jnius import autoclass
+            Activity = autoclass("org.kivy.android.PythonActivity")
+            current_activity = Activity.mActivity
+            Toast = autoclass("android.widget.Toast")
+            toast_message = "Recording permission denied. Please grant permission in settings."
+            toast = Toast.makeText(current_activity, toast_message, Toast.LENGTH_LONG)
+            toast.show()
             raise AudioProcessingError("Recording permission not granted", AudioProcessingError.ErrorType.SYSTEM_ERROR)
-        """Start recording audio on Android devices"""
+        # Start recording audio on android devices
         if not FileManager.ANDROID_ENABLED:
             raise RuntimeError("Android components unavailable")
         try:
@@ -284,7 +292,7 @@ class AudioRecorder:
             AndroidBuild = autoclass("android.os.Build")
             if AndroidBuild.VERSION.SDK_INT < 23: # For stability; Works with current runtime permissions model
                 raise Exception("Need Android 6.0+")
-            
+    
             MediaRecorder = autoclass("android.media.MediaRecorder")
             AudioSource = autoclass("android.media.MediaRecorder$AudioSource")
             

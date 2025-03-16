@@ -50,6 +50,8 @@ class FileManager():
     def get_data_path(subdir="") -> str:
         if FileManager.is_mobile() and ANDROID_ENABLED:
             try:
+                # Request storage permissions for android 6.0+
+                FileManager.request_storage_permission()
                 shared_storage = SharedStorage() # type: ignore
                 base = Path(shared_storage.get_cache_dir()) / "app_data"
             except Exception as e:
@@ -89,6 +91,56 @@ class FileManager():
             # Do not crash - log error and continue
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug(f"Failed path: {path}", exc_info=True)
+    
+    @staticmethod
+    def request_storage_permission():
+        # Request storage permission on android 6.0+
+        if not FileManager.is_mobile() or not ANDROID_ENABLED:
+            return True  # Not Android, so permissions not needed
+        try:
+            from jnius import autoclass
+            Activity = autoclass("org.kivy.android.PythonActivity")
+            current_activity = Activity.mActivity
+            ContextCompat = autoclass("androidx.core.content.ContextCompat")
+            PackageManager = autoclass("android.content.pm.PackageManager")
+            Manifest = autoclass("android.Manifest$permission")
+            ActivityCompat = autoclass("androidx.core.app.ActivityCompat")
+            Build = autoclass("android.os.Build")
+            # Read and write for complete storage access
+            read_permission = Manifest.READ_EXTERNAL_STORAGE
+            write_permission = Manifest.WRITE_EXTERNAL_STORAGE
+            # Check if permissions are already granted
+            read_granted = ContextCompat.checkSelfPermission(current_activity, read_permission) == PackageManager.PERMISSION_GRANTED
+            write_granted = ContextCompat.checkSelfPermission(current_activity, write_permission) == PackageManager.PERMISSION_GRANTED
+            # For Android 6.0+, request permissions if not granted
+            if (not read_granted or not write_granted) and Build.VERSION.SDK_INT >= 23:
+                logger.info("Requesting storage permissions from user")
+                # Build list of permissions to request
+                permissions_to_request = []
+                if not read_granted:
+                    permissions_to_request.append(read_permission)
+                if not write_granted:
+                    permissions_to_request.append(write_permission)
+                if permissions_to_request:
+                    # Convert list to java string array
+                    String = autoclass("java.lang.String")
+                    permissions_array = String[len(permissions_to_request)]()
+                    for i, permission in enumerate(permissions_to_request):
+                        permissions_array[i] = permission
+                    # Request permissions
+                    REQUEST_STORAGE_PERMISSION = 2  # Request code
+                    ActivityCompat.requestPermissions(current_activity, permissions_array, REQUEST_STORAGE_PERMISSION)
+                    # Inform the user about the request
+                    Toast = autoclass("android.widget.Toast")
+                    toast_message = "Storage permissions are required"
+                    toast = Toast.makeText(current_activity, toast_message, Toast.LENGTH_LONG)
+                    toast.show()
+                    # Return current status (app will need to handle retries)
+                    logger.info("Storage permission request dialog shown to user")
+            return read_granted and write_granted
+        except Exception as e:
+            logger.error(f"Error requesting storage permissions: {e}")
+            return False
 
     @staticmethod
     def validate_path(user_path: str) -> str:
