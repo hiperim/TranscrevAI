@@ -184,6 +184,29 @@ class FileManager():
             base = Path(__file__).parent.parent / "data"
         full_path = base / subdir
         return full_path.as_posix()
+    
+    @staticmethod
+    async def get_data_path_async(subdir="") -> str:
+        # Async version for requests with runtime permission
+        if FileManager.is_mobile() and ANDROID_ENABLED:
+            try:
+                # Request storage permissions
+                from src.file_manager import PermissionManager
+                permission_granted = await PermissionManager.request_storage_permissions()
+                if permission_granted:
+                    shared_storage = SharedStorage() # type: ignore
+                    base = Path(shared_storage.get_cache_dir()) / "app_data"
+                else:
+                    logger.warning("Storage permission denied, using internal storage")
+                    base = Path(f"/data/data/{APP_PACKAGE_NAME}/files")
+            except Exception as e:
+                logger.warning(f"Android storage error: {e}, using fallback path")
+                base = Path(f"/data/data/{APP_PACKAGE_NAME}/files")
+        else:
+            base = Path(__file__).parent.parent / "data"
+        full_path = base / subdir
+        os.makedirs(str(full_path), exist_ok=True)
+        return full_path.as_posix()
 
     @staticmethod
     def get_unified_temp_dir() -> str:
