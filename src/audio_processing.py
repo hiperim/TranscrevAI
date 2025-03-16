@@ -47,7 +47,7 @@ class AtomicAudioFile:
         self._committed = False  # Track commit state
     
     def _create_temp(self, extension):
-        """Create a temporary file path using the project's temp directory"""
+        # On windows, create a temporary file path using the project's temp directory
         temp_dir = FileManager.get_data_path("temp")
         FileManager.ensure_directory_exists(temp_dir)
         return os.path.join(temp_dir, f"atomic_temp_{os.getpid()}_{int(time.time()*1000)}{extension}")
@@ -237,6 +237,12 @@ class AudioRecorder:
         temp_dir = FileManager.get_data_path("temp")
         FileManager.ensure_directory_exists(temp_dir)
         return os.path.join(temp_dir, f"temp_recording_{int(time.time()*1000)}{extension}")
+    
+    async def get_temp_path_async(self, extension=".wav")
+        # Use async version for permission-aware path access
+        temp_dir = await FileManager.get_data_path_async("temp")
+        FileManager.ensure_directory_exists(temp_dir)
+        return os.path.join(temp_dir, f"temp_recording_{int(time.time()*1000)}{extension}")
         
     async def __aenter__(self):
         return self
@@ -258,6 +264,9 @@ class AudioRecorder:
             self.is_recording = True
             self._frames = []
             self._recording_start_time = time.time()
+            # Async version for external storage with permissions
+            self.temp_wav = await self.get_temp_path_async()
+            self.wav_file = self.temp_wav
             if FileManager.is_mobile() and ANDROID_ENABLED:
                 try:
                     await self._start_android_recording()
