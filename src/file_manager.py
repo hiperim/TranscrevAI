@@ -36,6 +36,129 @@ class SecurityError(RuntimeError):
         logger.error(f"Security violation: {message}")
         super().__init__(message)
 
+class PermissionManager:
+    # Permission request codes
+    AUDIO_PERMISSION_CODE = 1001
+    STORAGE_PERMISSION_CODE = 1002
+
+    @staticmethod
+    def check_permission(permission):
+        if not FileManager.is_mobile() or not ANDROID_ENABLED:
+            return True  # Check not needed
+        # Android enviroment
+        try:
+            from jnius import autoclass
+            Activity = autoclass("org.kivy.android.PythonActivity")
+            current_activity = Activity.mActivity
+            ContextCompat = autoclass("androidx.core.content.ContextCompat")
+            PackageManager = autoclass("android.content.pm.PackageManager")
+            return ContextCompat.checkSelfPermission(current_activity, permission) == PackageManager.PERMISSION_GRANTED
+        except Exception as e:
+            logger.error(f"Error checking permission: {e}")
+            return False
+    
+    @staticmethod
+    def request_permission(permission, request_code):
+        if not FileManager.is_mobile() or not ANDROID_ENABLED:
+            return True # Request not needed
+        # Android enviroment
+        try:
+            from jnius import autoclass
+            Activity = autoclass("org.kivy.android.PythonActivity")
+            current_activity = Activity.mActivity
+            ActivityCompat = autoclass("androidx.core.app.ActivityCompat")
+            # Create java string array with 1 element
+            String = autoclass("java.lang.String")
+            permissions_array = String[1]()
+            permissions_array[0] = permission
+            # Request permission
+            ActivityCompat.requestPermissions(current_activity, permissions_array, request_code)
+            logger.info(f"Requested permission: {permission}")
+            return True
+        except Exception as e:
+            logger.error(f"Error requesting permission: {e}")
+            return False
+    
+    @staticmethod
+    async def check_permission_result(request_code, timeout=5):
+        if not FileManager.is_mobile() or not ANDROID_ENABLED:
+            return True # Check not needed
+        # Android enviroment
+        try:
+            from jnius import autoclass
+            import time
+            Context = autoclass("android.content.Context")
+            Activity = autoclass("org.kivy.android.PythonActivity")
+            PackageManager = autoclass("android.content.pm.PackageManager")
+            current_activity = Activity.mActivity
+            preferences = current_activity.getSharedPreferences("TranscrevAIPermissions", Context.MODE_PRIVATE)
+            # Get initial timestamp
+            initial_ts = preferences.getLong("timestamp", 0)
+            # Wait for permission response with timeout
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                # Check if we have new results
+                current_ts = preferences.getLong("timestamp", 0)
+                stored_request_code = preferences.getInt("permission_request_code", -1)
+                if current_ts > initial_ts and stored_request_code == request_code:
+                    # There is a result match for request code
+                    grant_results = preferences.getString("grant_results", "")
+                    if grant_results:
+                        # Convert to intergers and split with comma
+                        grant_results = [int(r) for r in grant_results.split(",") if r]
+                        if grant_results and grant_results[0] == PackageManager.PERMISSION_GRANTED:
+                            logger.info(f"Permission granted for request: {request_code}")
+                            return True
+                        else:
+                            logger.warning(f"Permission denied for request: {request_code}")
+                            return False
+                # Wait before checking again
+                await asyncio.sleep(0.5)
+            logger.warning(f"Permission request timed out: {request_code}")
+            return False
+        except Exception as e:
+            logger.error(f"Error checking permission result: {e}")
+            return False
+    
+    @staticmethod
+    async def request_audio_permission():
+        if not FileManager.is_mobile() or not ANDROID_ENABLED:
+            return True # Request not needed
+        try: # Android enviroment
+            from jnius import autoclass
+            Manifest = autoclass("android.Manifest$permission")
+            # Check if already granted
+            if PermissionManager.check_permission(Manifest.RECORD_AUDIO):
+                return True
+            # Request permission
+            if PermissionManager.request_permission(
+                    Manifest.RECORD_AUDIO, PermissionManager.AUDIO_PERMISSION_CODE):
+                # Wait for result
+                return await PermissionManager.check_permission_result(PermissionManager.AUDIO_PERMISSION_CODE)
+            return False
+        except Exception as e:
+            logger.error(f"Error requesting audio permission: {e}")
+            return False
+    
+    @staticmethod
+    async def request_storage_permission():
+        if not FileManager.is_mobile() or not ANDROID_ENABLED:
+            return True # Request not needed
+        try: # Android enviroment
+            from jnius import autoclass
+            Manifest = autoclass("android.Manifest$permission")
+            # Check for storage permission
+            if PermissionManager.check_permission(Manifest.WRITE_EXTERNAL_STORAGE) and PermissionManager.check_permission(Manifest.READ_EXTERNAL_STORAGE):
+                return True
+            # Request write permission (implies read on older android versions)
+            if PermissionManager.request_permission(Manifest.WRITE_EXTERNAL_STORAGE, PermissionManager.STORAGE_PERMISSION_CODE):
+                # Wait for result
+                return await PermissionManager.check_permission_result(PermissionManager.STORAGE_PERMISSION_CODE)
+            return False
+        except Exception as e:
+            logger.error(f"Error requesting storage permission: {e}")
+            return False
+
 class FileManager():
     def is_mobile():
         return sys.platform != 'win32' and hasattr(sys, 'getandroidapilevel')
