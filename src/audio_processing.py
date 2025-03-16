@@ -238,7 +238,7 @@ class AudioRecorder:
         FileManager.ensure_directory_exists(temp_dir)
         return os.path.join(temp_dir, f"temp_recording_{int(time.time()*1000)}{extension}")
     
-    async def get_temp_path_async(self, extension=".wav")
+    async def get_temp_path_async(self, extension=".wav"):
         # Use async version for permission-aware path access
         temp_dir = await FileManager.get_data_path_async("temp")
         FileManager.ensure_directory_exists(temp_dir)
