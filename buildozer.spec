@@ -1,32 +1,19 @@
 [app]
-title = TranscrevAI
-package.name = transcrevai
-package.domain = com.transcrevai
-source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json,wav,zip
-version = 0.1
-requirements = python3,kivy,toga,androidstorage4kivy,pyjnius,numpy,scipy,vosk,pyaudioanalysis,soundfile,sounddevice,static_ffmpeg,librosa,aiofiles,psutil
-android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-android.api = 31
-android.minapi = 23
-android.ndk = 19c
-android.arch = armeabi-v7a arm64-v8a
-android.allow_backup = True
 
 # (str) Title of your application
-# title = My Application
+title = TranscrevAI
 
 # (str) Package name
-# package.name = myapp
+package.name = transcrevai
 
 # (str) Package domain (needed for android/ios packaging)
-# package.domain = org.test
+package.domain = com.transcrevai
 
 # (str) Source code where the main.py live
-# source.dir = .
+source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-# source.include_exts = py,png,jpg,kv,atlas
+source.include_exts = py,png,jpg,kv,atlas,json,wav,zip
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -42,7 +29,7 @@ android.allow_backup = True
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-# version = 0.1
+version = 0.1
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -50,7 +37,7 @@ android.allow_backup = True
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-# requirements = python3,kivy
+requirements = python3,kivy,toga,androidstorage4kivy,pyjnius,numpy,scipy,vosk,pyaudioanalysis,soundfile,sounddevice,static_ffmpeg,librosa,aiofiles,psutil
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -108,22 +95,22 @@ fullscreen = 0
 
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the supported syntaxes and properties)
-# android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
+android.permissions = RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
 # (list) features (adds uses-feature -tags to manifest)
 # android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-# android.api = 31
+android.api = 31
 
 # (int) Minimum API your APK / AAB will support.
-# android.minapi = 21
+android.minapi = 23
 
 # (int) Android SDK version to use
 # android.sdk = 20
 
 # (str) Android NDK version to use
-# android.ndk = 23b
+android.ndk = 19c
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 # android.ndk_api = 21
@@ -152,7 +139,7 @@ fullscreen = 0
 # android.accept_sdk_license = False
 
 # (str) Android entry point, default is ok for Kivy-based app
-android.entrypoint = org.transcrevai.PermissionActivity
+android.entrypoint = com.transcrevai.PermissionActivity
 
 # (str) Full name including package path of the Java class that implements Android Activity
 # use that parameter together with android.entrypoint to set custom Java class instead of PythonActivity
@@ -239,7 +226,7 @@ android.add_src = src
 #android.add_packaging_options =
 
 # (list) Java classes to add as activities to the manifest.
-android.add_activities = org.transcrevai.PermissionActivity
+android.add_activities = com.transcrevai.PermissionActivity
 
 # (str) OUYA Console category. Should be one of GAME or APP
 # If you leave this blank, OUYA support will not be enabled
@@ -273,7 +260,7 @@ android.add_activities = org.transcrevai.PermissionActivity
 #android.wakelock = False
 
 # (list) Android application meta-data to set (key=value format)
-#android.meta_data =
+android.meta_data =
 
 # (list) Android library project to add (will be added in the
 # project.properties automatically.)
@@ -296,14 +283,14 @@ android.add_activities = org.transcrevai.PermissionActivity
 
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 # In past, was `android.arch` as we weren't supporting builds for multiple archs at the same time.
-# android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a, armeabi-v7a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
 # android.numeric_version = 1
 
 # (bool) enables Android auto backup feature (Android API >=23)
-# android.allow_backup = True
+android.allow_backup = True
 
 # (str) XML file for custom backup rules (see official auto backup documentation)
 # android.backup_rules =
