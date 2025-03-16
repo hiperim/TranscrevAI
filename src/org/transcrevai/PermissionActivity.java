@@ -1,4 +1,4 @@
-package com.transcrevai;
+package com.transcrevai.app;
 
 import org.kivy.android.PythonActivity;
 import android.os.Bundle;
