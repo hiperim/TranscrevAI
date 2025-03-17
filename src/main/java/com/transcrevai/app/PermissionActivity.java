@@ -1,10 +1,11 @@
-package main.java.com.transcrevai.app;
+package com.transcrevai.app;
 
 import org.kivy.android.PythonActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.annotation.NonNull;
 
 public class PermissionActivity extends PythonActivity {
     private static final String TAG = "TranscrevAI";
@@ -17,7 +18,7 @@ public class PermissionActivity extends PythonActivity {
     }
     
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         
         // Store results in SharedPreferences so python can access them
