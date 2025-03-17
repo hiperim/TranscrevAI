@@ -7,5 +7,12 @@
     <classpathentry kind="var" path="ANDROID_HOME/platforms/android-31/android.jar"/>
     <classpathentry kind="var" path="ANDROID_HOME/platforms/android-31/data/res"/>
     
+    <!-- AndroidX libraries -->
+    <classpathentry kind="var" path="ANDROID_HOME/extras/androidx/androidx.jar"/>
+    <classpathentry kind="var" path="ANDROID_HOME/extras/androidx/androidx-annotations.jar"/>
+    
+    <!-- Kivy Android integration -->
+    <classpathentry kind="var" path="BUILDOZER_DIR/.buildozer/android/platform/build-*/dists/transcrevai-*/libs/org.kivy.android.jar"/>
+    
     <classpathentry kind="output" path="bin"/>
 </classpath>
