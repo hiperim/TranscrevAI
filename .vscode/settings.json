@@ -1,0 +1,18 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+    "python.analysis.extraPaths": ["${workspaceFolder}",
+                                   "${workspaceFolder}/src",
+                                   "${workspaceFolder}/.venv/Lib/site-packages"],
+    "terminal.integrated.env.windows": {"PYTHONPATH": "${workspaceFolder}"},
+    "python.terminal.activateEnvironment": true,
+    "python.testing.pytestArgs": ["."],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.project.referencedLibraries": ["${env:ANDROID_HOME}/platforms/android-31/android.jar",
+                                         "${env:ANDROID_HOME}/platforms/android-31/data/res",
+                                         "${env:ANDROID_HOME}/extras/androidx/androidx.jar",
+                                         "${env:ANDROID_HOME}/extras/androidx/androidx-annotations.jar"],
+    "java.project.sourcePaths": ["src/main/java"]
+}
