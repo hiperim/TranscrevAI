@@ -14,6 +14,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN
 from config.app_config import MODEL_DIR
 
+app = None
 logger = logging.getLogger(__name__)
 
 class TranscrevAI(toga.App):
@@ -202,4 +203,6 @@ class TranscrevAI(toga.App):
         await self.startup()
 
 if __name__ == "__main__":
-    TranscrevAI().main_loop()
+    # Global app instance that buildozer can find
+    app = TranscrevAI("TranscrevAI", "com.transcrevai.app")
+    app.main_loop()
