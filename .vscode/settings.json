@@ -1,9 +1,37 @@
 {
+    //"terminal.integrated.defaultProfile.windows": "Ubuntu (WSL)",
+    //"terminal.integrated.profiles.windows": {
+    //"PowerShell": {
+    //    "source": "PowerShell",
+    //    "icon": "terminal-powershell"
+    //},
+    //"Command Prompt": {
+    //    "path": [
+    //    "${env:windir}\\Sysnative\\cmd.exe",
+    //    "${env:windir}\\System32\\cmd.exe"
+    //    ],
+    //    "args": [],
+    //    "icon": "terminal-cmd"
+    //},
+    //"Git Bash": {
+    //    "source": "Git Bash"
+    //},
+    //"WSL": {
+    //    "path": [
+    //    "C:\\WINDOWS\\System32\\wsl.exe"
+    //    ],
+    //    "args": [],
+    //    "icon": "bell"
+    //}
+    //},
+    
     "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
     "python.analysis.extraPaths": ["${workspaceFolder}",
                                    "${workspaceFolder}/src",
                                    "${workspaceFolder}/.venv/Lib/site-packages"],
-    "terminal.integrated.env.windows": {"PYTHONPATH": "${workspaceFolder}"},
+    "terminal.integrated.env.windows": {
+        
+        "PYTHONPATH": "${workspaceFolder}"},
     "python.terminal.activateEnvironment": true,
     "python.testing.pytestArgs": ["."],
     "python.testing.unittestEnabled": false,
