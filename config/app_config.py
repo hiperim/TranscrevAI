@@ -40,7 +40,7 @@ class AppConfig:
     # --- Audio settings
     sample_rate: int = 16000
     chunk_size: int = 1024
-    max_audio_duration: float = 3600.0  # 1 hour
+    max_audio_duration: float = 600.0  # 1 hour
 
     # --- Diarization settings
     diarization_threshold: float = 0.335

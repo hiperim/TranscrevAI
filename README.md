@@ -51,37 +51,23 @@ A aplicação é construída sobre o FastAPI e segue uma arquitetura moderna bas
 
 ## Instalacao e Uso
 
-### Quick Start (Recomendado)
+### Demonstração Online
 
-```bash
-git clone https://github.com/hiperim/transcrevai.git
-cd transcrevai
-docker compose -f docker-compose.pull.yml up
-```
+**Acesse: https://transcrevai.online:8000**
 
-Acesso: http://localhost:8000
+Teste o TranscrevAI diretamente no navegador sem instalar nada.
 
-**Detalhes:**
-- Imagem ~20GB baixa automaticamente do Docker Hub
-- Modelos ML embedded - sem necessidade de token Hugging Face
-- Suporta AMD64 (Intel/AMD) e ARM64 (Apple Silicon)
-- Hardware auto-detectado para performance otima
+**Características:**
+- HTTPS com certificado Let's Encrypt
+- Todas as funcionalidades disponíveis (transcrição, diarização, gravação ao vivo)
+- Hospedado via port forwarding (servidor próprio)
+- Ideal para avaliação rápida do sistema
 
-**Comandos uteis:**
-```bash
-# Rodar em background
-docker compose -f docker-compose.pull.yml up -d
-
-# Ver logs
-docker compose -f docker-compose.pull.yml logs -f
-
-# Parar
-docker compose -f docker-compose.pull.yml down
-```
+**Nota:** Esta é uma instância de demonstração. Para uso em produção ou desenvolvimento, instale localmente.
 
 ---
 
-### Instalacao Local (Desenvolvimento)
+### Instalação Local - Desenvolvimento Python
 
 **Requer Python 3.11+, FFmpeg e token Hugging Face.**
 
@@ -107,7 +93,7 @@ docker compose -f docker-compose.pull.yml down
    # Produção
    pip install -r requirements.txt
 
-   # Desenvolvimento (inclui pytest, etc)
+   # Desenvolvimento (inclui pytest)
    pip install -r requirements-dev.txt
    ```
 
@@ -352,37 +338,23 @@ The application is built on FastAPI and follows a modern Dependency Injection (D
 
 ## Installation and Usage
 
-### Quick Start (Recommended)
+### Online Demo
 
-```bash
-git clone https://github.com/hiperim/transcrevai.git
-cd transcrevai
-docker compose -f docker-compose.pull.yml up
-```
+**Access: https://transcrevai.online:8000**
 
-Access: http://localhost:8000
+Test TranscrevAI directly in your browser without installing anything.
 
-**Details:**
-- ~20GB image downloads automatically from Docker Hub
-- ML models embedded - no Hugging Face token required
-- Supports AMD64 (Intel/AMD) and ARM64 (Apple Silicon)
-- Hardware auto-detected for optimal performance
+**Features:**
+- HTTPS with Let's Encrypt certificate
+- All features available (transcription, diarization, live recording)
+- Hosted via port forwarding (own server)
+- Ideal for quick system evaluation
 
-**Useful commands:**
-```bash
-# Run in background
-docker compose -f docker-compose.pull.yml up -d
-
-# View logs
-docker compose -f docker-compose.pull.yml logs -f
-
-# Stop
-docker compose -f docker-compose.pull.yml down
-```
+**Note:** This is a demonstration instance. For production or development use, install locally.
 
 ---
 
-### Local Installation (Development)
+### Local Installation - Python Development
 
 **Requires Python 3.11+, FFmpeg and Hugging Face token.**
 

@@ -1,5 +1,5 @@
 """
-Dependency injection for FastAPI
+Dependency injection for framework
 """
 import os
 import queue
@@ -80,53 +80,8 @@ def get_live_audio_processor() -> LiveAudioProcessor:
             _services['live_audio_processor'] = LiveAudioProcessor(file_manager=file_manager)
         return _services['live_audio_processor']
 
-
-def get_transcription_queue() -> queue.Queue:
-    """Get or create transcription queue for worker"""
-    with _lock:
-        if 'transcription_queue' not in _services:
-            _services['transcription_queue'] = queue.Queue()
-        return _services['transcription_queue']
-
-
-def get_worker_thread(loop: Optional[asyncio.AbstractEventLoop] = None) -> threading.Thread:
-    """Get or create worker thread"""
-    with _lock:
-        if 'worker_thread' not in _services:
-            from src.worker import transcription_worker
-            if loop is None:
-                loop = asyncio.get_running_loop()
-            
-            assert loop is not None # Ensure loop is not None for the type checker
-
-            # Create worker thread
-            worker_thread = threading.Thread(
-                target=transcription_worker,
-                args=(
-                    get_transcription_queue(),
-                    get_file_manager(),
-                    get_live_audio_processor(),
-                    get_transcription_service(),
-                    get_session_manager(),
-                    loop
-                ),
-                daemon=True
-            )
-            worker_thread.start()
-            _services['worker_thread'] = worker_thread
-        return _services['worker_thread']
-
-
 def cleanup_services():
     """Cleanup all services on shutdown"""
     with _lock:
-        # Signal worker to stop
-        if 'transcription_queue' in _services:
-            _services['transcription_queue'].put(None)
-
-        # Wait for worker
-        if 'worker_thread' in _services:
-            _services['worker_thread'].join(timeout=5)
-
         # Clear all services
         _services.clear()

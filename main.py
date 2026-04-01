@@ -6,11 +6,10 @@ import time
 import uuid
 import hashlib
 from contextlib import asynccontextmanager
-from typing import Dict, Any, Optional
+from typing import Optional
 import torch
-import psutil
 import uvicorn
-from fastapi import (FastAPI, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Depends, HTTPException, status, BackgroundTasks)
+from fastapi import (FastAPI, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Depends, HTTPException)
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -18,13 +17,11 @@ from pathlib import Path
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from src.transcription import TranscriptionService
-from src.diarization import PyannoteDiarizer
-from src.audio_processing import AudioQualityAnalyzer, SessionManager, LiveAudioProcessor, SessionData
+from src.audio_processing import SessionManager, LiveAudioProcessor, SessionData
 from datetime import datetime
 from src.file_manager import FileManager
 from src.pipeline import process_audio_pipeline
-from src.exceptions import TranscrevAIError, TranscriptionError, DiarizationError, AudioProcessingError, SessionError, ValidationError
+from src.exceptions import TranscriptionError, DiarizationError, AudioProcessingError, SessionError, ValidationError
 from config.app_config import get_config
 
 # --- Global Configuration & Tuning
@@ -54,7 +51,6 @@ torch_threads, omp_threads = configure_adaptive_threads()
 torch.set_num_threads(torch_threads)
 os.environ["OMP_NUM_THREADS"] = str(omp_threads)
 logger.info(f"PERFORMANCE TUNING APPLIED: OMP_NUM_THREADS={omp_threads}, torch_threads={torch_threads}")
-DEVICE = "cpu"
 
 # Import DI functions
 from src.dependencies import (
@@ -64,8 +60,6 @@ from src.dependencies import (
     get_audio_quality_analyzer,
     get_session_manager,
     get_live_audio_processor,
-    get_transcription_queue,
-    get_worker_thread,
     cleanup_services
 )
 
@@ -88,13 +82,8 @@ async def lifespan(app: FastAPI):
     get_audio_quality_analyzer()
     get_session_manager()
     get_live_audio_processor()
-    get_transcription_queue()
 
-    # Get running loop - pass to worker
-    loop = asyncio.get_running_loop()
-    get_worker_thread(loop)
-
-    logger.info("Services and worker initialized successfully.")
+    logger.info("Services initialized successfully.")
     yield
 
     # --- Shutdown logic
@@ -141,7 +130,6 @@ async def read_root(request: Request):
 @limiter.limit("10/minute")
 async def upload_audio(
     request: Request,
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     session_id: Optional[str] = Form(None),
     file_manager: FileManager = Depends(get_file_manager),
@@ -149,7 +137,7 @@ async def upload_audio(
 ):
 
     # File size validation
-    MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500MB
+    MAX_UPLOAD_SIZE = 100 * 1024 * 1024  # 100MB
     file_size = 0
     content = await file.read()
     file_size = len(content)
@@ -157,7 +145,7 @@ async def upload_audio(
     if file_size > MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=413,
-            detail=f"Arquivo muito grande. Tamanho máximo: 500MB. Tamanho recebido: {file_size / (1024*1024):.1f}MB"
+            detail=f"Arquivo muito grande. Tamanho máximo: 100MB. Tamanho recebido: {file_size / (1024*1024):.1f}MB"
         )
 
     # Reset file pointer for later processing
@@ -174,7 +162,7 @@ async def upload_audio(
         import librosa
         try:
             duration = librosa.get_duration(path=str(file_path))
-            if duration > 3600:  # 60 min
+            if duration > 600:  # 10 min
                 Path(file_path).unlink(missing_ok=True)
                 raise HTTPException(
                     status_code=413,
@@ -455,15 +443,18 @@ async def websocket_endpoint(
             logger.info(f"WebSocket cleanup complete: {session_id}")
 
 if __name__ == "__main__":
-    # SSL configuration (pass explicitly to avoid **kwargs type-mismatch issues)
+    # SSL configuration 
     ssl_certfile = None
     ssl_keyfile = None
+    protocol = "http"
+
     if app_config.ssl_cert_path and app_config.ssl_key_path:
         ssl_certfile = app_config.ssl_cert_path
         ssl_keyfile = app_config.ssl_key_path
-        logger.info(f"Starting server with SSL on https://{app_config.host}:{app_config.port}")
-    else:
-        logger.info(f"Starting server without SSL on http://{app_config.host}:{app_config.port}")
+        protocol = "https"
+
+    display_host = "localhost" if app_config.host in ["0.0.0.0", "::"] else app_config.host
+    logger.info(f"Starting server on {protocol}://{display_host}:{app_config.port}")
 
     uvicorn.run(
         app="main:app",
