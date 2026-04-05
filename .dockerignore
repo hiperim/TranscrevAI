@@ -64,6 +64,10 @@ Desktop.ini
 !README.md
 !pipeline_workflow.md
 
+# Allow setup scripts for Docker build
+!setups_certs_SSL_ModelsCache/
+!setups_certs_SSL_ModelsCache/download_models.py
+
 # Docker files (except the present)
 Dockerfile
 docker-compose.yml
