@@ -172,7 +172,7 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
             continue
 
         # Use word-level timestamps for precise alignment
-        # Margin increased to 0.3s to compensate for VAD temporal desynchronization
+        # Margin of 1.0s to compensate for VAD temporal desynchronization
         word_speaker_counts: Dict[str, int] = {}
         for word in segment['words']:
             word_mid = (word['start'] + word['end']) / 2
