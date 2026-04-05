@@ -1,0 +1,25 @@
+BENCHMARK DE DIARIZAÇÃO E TRANSCRIÇÃO - TranscrevAI - Arquivo: d.speakers.wav - 21 seconds real audio recording (has silent parts)
+
+TAREFA PARA CLAUDE: Processar arquivo de áudio "d.speakers.wav" com TranscrevAI_windows e apresentar resultados obtidos: diarização apurada(quantos falantes encontrados no áudio); conteúdo da transcrição obtida, com timestamps, em arquivo .srt e preview no websocket do app; performance ratio obtida (processing_time:actual_audio_time).
+
+TRANSCRIÇÃO ESPERADA:
+==================
+-Speaker_1 (00:00-00:11): "Então, Rogério, eu sei que é seu primeiro dia aqui na empresa, mas eu não gostaria que você me chamasse de você na empresa, sabe? Acho que é um pouco informal demais."
+-Speaker_1 (00:11-00:13): "A gente tem uma hierarquia aqui dentro."
+-Speaker_2 (00:13-00:13): "Claro."
+-Speaker_1 (00:14-00:15): "Então acho melhor a gente mudar isso."
+-Speaker_2 (00:15-00:16): "Desculpa. Vou voltar."
+
+RESULTADOS ESPERADOS PARA PROCESSAMENTO DE d.speakers.wav:
+========================
+- Accuracy Transcrição: ≥90%
+- Accuracy Diarização: 2 speakers detectados corretamente
+- Accuracy Timestamps: ±1 segundos de tolerância
+- Ratio Performance: close to 0.5:1 ratio (processing_time:actual_audio_time)
+
+PALAVRAS-CHAVE CRÍTICAS:
+======================
+- "Rogério" (nome próprio)
+- "hierarquia" (palavra complexa)
+- "informal" (contexto empresarial)
+- "empresa" (repetida)

@@ -1,0 +1,9 @@
+tunnel: 85e1e37e-ba51-4c6f-9403-2eabbd1e2acb
+credentials-file: C:\fullWebDev\.cloudflared\85e1e37e-ba51-4c6f-9403-2eabbd1e2acb.json
+
+ingress:
+  - hostname: transcrevai.online
+    service: http://localhost:8000
+  - hostname: www.transcrevai.online
+    service: http://localhost:8000
+  - service: http_status:404

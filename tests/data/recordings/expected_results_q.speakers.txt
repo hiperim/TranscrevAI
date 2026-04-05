@@ -1,0 +1,21 @@
+BENCHMARK DE DIARIZAÇÃO E TRANSCRIÇÃO - TranscrevAI - Arquivo: q.speakers.wav - 14 seconds real audio recording
+
+TAREFA PARA CLAUDE: Processar arquivo de áudio "q.speakers.wav" com TranscrevAI_windows e apresentar resultados obtidos: diarização apurada(quantos falantes encontrados no áudio); conteúdo da transcrição obtida, com timestamps, em arquivo .srt e preview no websocket do app; performance ratio obtida (processing_time:actual_audio_time).
+
+TRANSCRIÇÃO ESPERADA:
+==================
+-Speaker_1 (00:01-00:04): "E eu acho que assustou um pouco os homens, sabe, tipo?"
+-Speaker_2 (00:03): "É."
+-Speaker_1 (00:04-00:07): "Eles tem assim com o pé atrás, não sei."
+-Speaker_2 (00:06): "Quem tem medo?"
+-Speaker_1 (00:07-00:09): "Mas séria, séria, não tem não. Sou solteira."
+-Speaker_2 (00:09-00:10): "Você tem medo dela Confúcio?"
+-Speaker_3 (00:10-00:12): "Pelo sim, pelo não, como é que fica?"
+-Speaker_4 (00:13-00:14): "Machista."
+
+RESULTADOS ESPERADOS PARA PROCESSAMENTO DE d.speakers.wav:
+========================
+- Accuracy Transcrição: ≥90%
+- Accuracy Diarização: 4 speakers detectados corretamente
+- Accuracy Timestamps: ±1 segundos de tolerância
+- Ratio Performance: close to 0.5:1 ratio (processing_time:actual_audio_time)
