@@ -43,14 +43,10 @@ class PyannoteDiarizer:
             logger.info("Pipeline loaded from local cache.")
 
 
-            # Instantiate with custom hyperparameters from config
-            instantiate_params = {
-                "clustering": {
-                    "method": "centroid",
-                    "min_cluster_size": config.diarization_min_cluster_size,
-                    "threshold": config.diarization_threshold
-                }
-            }
+            # Read pipeline's optimized defaults, then override only what we need
+            instantiate_params = self.pipeline.parameters(instantiated=True)
+            instantiate_params["clustering"]["threshold"] = config.diarization_threshold
+            instantiate_params["clustering"]["min_cluster_size"] = config.diarization_min_cluster_size
 
             # Add min/max speakers if specified in config
             if config.diarization_min_speakers is not None:
