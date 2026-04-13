@@ -504,10 +504,12 @@ class SessionData:
     websocket: Optional["WebSocket"]
     format: Optional[str]
     started_at: "datetime"
-    completed_at: Optional["datetime"] = None # Adicionado para o cleanup
+    completed_at: Optional["datetime"] = None
     temp_file: Optional[str] = None
     files: Dict[str, str] = field(default_factory=dict)
     status: str = "idle"
+    error: Optional[str] = None
+    result: Optional[Dict[str, Any]] = None
 
 class SessionManager:
     """Centralized session lifecycle management - single source of truth for all active recording sessions"""

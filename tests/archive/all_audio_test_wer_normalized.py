@@ -31,10 +31,10 @@ TRUTH_DIR = Path(__file__).parent.parent / "ground_truth"
 
 # Arquivos de teste: (audio, ground_truth, expected_speakers)
 TEST_FILES = [
-    ("d.speakers.wav", "d_speakers.txt", 2),
-    ("q.speakers.wav", "q_speakers.txt", 4),
-    ("t.speakers.wav", "t_speakers.txt", 3),
-    ("t2.speakers.wav", "t2_speakers.txt", 3),
+    ("two.speakers.wav", "two_speakers.txt", 2),
+    ("four.speakers.wav", "four_speakers.txt", 4),
+    ("three.speakers.wav", "three_speakers.txt", 3),
+    ("three.speakers_2.wav", "three_speakers_2.txt", 3),
 ]
 
 # ===========================================================

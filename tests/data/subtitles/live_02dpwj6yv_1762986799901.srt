@@ -1,0 +1,4 @@
+﻿1
+00:00:00,899 --> 00:00:04,240
+[SPEAKER_01] Teste um, dois, três, três,
+dois, um, teste.

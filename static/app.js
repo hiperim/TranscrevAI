@@ -423,7 +423,8 @@ async function setupWebSocketConnection(sessionId, onMessageHandler, retryCount 
                         });
                 }, delay);
             } else if (retryCount >= WS_CONFIG.RETRY_ATTEMPTS) {
-                showStatus('Falha na conexão. Recarregue a página.', 0);
+                showStatus('Conexão perdida. Verificando status do processamento...', 50);
+                pollSessionStatus(sessionId);
             }
         };
 
@@ -460,6 +461,69 @@ async function setupWebSocketConnection(sessionId, onMessageHandler, retryCount 
             throw error;
         }
     }
+}
+
+async function pollSessionStatus(sessionId) {
+    const POLL_INTERVAL = 3000;   // 3 seconds between checks
+    const POLL_TIMEOUT  = 600000; // stop after 10 minutes
+    const started = Date.now();
+
+    const uploadBtn = document.getElementById('upload-btn');
+    const spinner   = document.getElementById('loading-spinner');
+
+    const interval = setInterval(async () => {
+        if (Date.now() - started > POLL_TIMEOUT) {
+            clearInterval(interval);
+            showStatus('Tempo esgotado. Tente novamente.', 0);
+            if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Processar Arquivo'; }
+            if (spinner) spinner.style.display = 'none';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/status/${sessionId}`);
+
+            if (res.status === 404) {
+                clearInterval(interval);
+                showStatus('Sessão expirada. Tente novamente.', 0);
+                if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Processar Arquivo'; }
+                if (spinner) spinner.style.display = 'none';
+                return;
+            }
+
+            const data = await res.json();
+
+            if (data.status === 'error') {
+                clearInterval(interval);
+                showStatus('Erro: ' + (data.error || 'Erro desconhecido'), 0);
+                if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Processar Arquivo'; }
+                if (spinner) spinner.style.display = 'none';
+            } else if (data.status === 'completed') {
+                clearInterval(interval);
+                try {
+                    const resultRes = await fetch(`/result/${sessionId}`);
+                    if (resultRes.ok) {
+                        const result = await resultRes.json();
+                        showStatus('Processamento concluído!', 100);
+                        showResults(result, sessionId);
+                        document.getElementById('download-btn').disabled = false;
+                    } else {
+                        showStatus('Processamento concluído. Baixe o SRT.', 100);
+                        document.getElementById('download-btn').disabled = false;
+                    }
+                } catch (e) {
+                    showStatus('Processamento concluído. Baixe o SRT.', 100);
+                    document.getElementById('download-btn').disabled = false;
+                }
+                if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = 'Processar Arquivo'; }
+                if (spinner) spinner.style.display = 'none';
+            }
+            // status "processing" or "idle": keep polling
+
+        } catch (e) {
+            console.error('Polling error:', e);
+        }
+    }, POLL_INTERVAL);
 }
 
 function handleUploadWebSocketMessage(data) {

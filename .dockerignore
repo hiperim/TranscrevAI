@@ -31,6 +31,7 @@ MANIFEST
 venv/
 env/
 ENV/
+venv_community1/
 
 # Development files
 .vscode/

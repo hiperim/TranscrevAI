@@ -8,6 +8,7 @@ import functools
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from src.exceptions import TranscriptionError, AudioProcessingError
+from src.executor import ml_executor
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -196,7 +197,7 @@ class TranscriptionService:
                     transcribe_args=transcribe_args
                 )
                 raw_segments, info, full_text, confidence = await loop.run_in_executor(
-                    None, sync_func
+                    ml_executor, sync_func
                 )
             except FileNotFoundError as e:
                 raise AudioProcessingError("Audio not found", context={"audio_path": audio_path}) from e

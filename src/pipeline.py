@@ -56,11 +56,14 @@ async def process_audio_pipeline(audio_path: str, session_id: str) -> None:
     except Exception as e:
         logger.error(f"Error in audio processing pipeline: {str(e)}", exc_info=True)
         session = await session_manager.get_session(session_id)
-        if session and session.websocket:
-            try:
-                await session.websocket.send_json({'type': 'error', 'message': f"Erro no pipeline: {str(e)}"})
-            except Exception:
-                logger.warning(f"Could not send error to {session_id} (WebSocket closed)")
+        if session:
+            session.status = "error"
+            session.error = str(e)
+            if session.websocket:
+                try:
+                    await session.websocket.send_json({'type': 'error', 'message': f"Erro no pipeline: {str(e)}"})
+                except Exception:
+                    logger.warning(f"Could not send error to {session_id} (WebSocket closed)")
         return
 
     final_result = {
@@ -76,7 +79,8 @@ async def process_audio_pipeline(audio_path: str, session_id: str) -> None:
         if session:
             session.files["audio"] = audio_path
             session.files["subtitles"] = str(srt_path)
-            session.status = "completed"  # Mark session as completed
+            session.status = "completed"
+            session.result = final_result
             logger.info(f"File paths stored in SessionManager for {session_id}")
 
             if session.websocket:

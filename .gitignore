@@ -18,6 +18,7 @@ venv/pyvenv.cfg
 .myenv/
 myenv/
 ENV/
+venv_community1/
 
 # IDE / Editor files
 .idea/
@@ -48,12 +49,6 @@ tests/logs/
 /certs/
 inputs/
 outputs/
-
-# Media and output files
-*.wav
-*.mp4
-*.mp3
-*.srt
 
 # Sensitive & local config
 *.log

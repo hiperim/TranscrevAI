@@ -1,0 +1,3 @@
+﻿1
+00:00:00,560 --> 00:00:02,419
+[SPEAKER_01] Teste um dois três testes.

@@ -43,14 +43,14 @@ logger = logging.getLogger(__name__)
 # Test configuration
 AUDIO_FILES = [
     {
-        "name": "d.speakers.wav",
-        "path": Path(__file__).parent.parent / "data" / "recordings" / "d.speakers.wav",
+        "name": "two.speakers.wav",
+        "path": Path(__file__).parent.parent / "data" / "recordings" / "two.speakers.wav",
         "ground_truth": Path(__file__).parent / "ground_truth" / "d_speakers.txt",
         "expected_speakers": 2
     },
     {
-        "name": "q.speakers.wav",
-        "path": Path(__file__).parent.parent / "data" / "recordings" / "q.speakers.wav",
+        "name": "four.speakers.wav",
+        "path": Path(__file__).parent.parent / "data" / "recordings" / "four.speakers.wav",
         "ground_truth": Path(__file__).parent / "ground_truth" / "q_speakers.txt",
         "expected_speakers": 4
     }

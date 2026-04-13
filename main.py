@@ -259,6 +259,28 @@ async def download_file(session_id: str, file_type: str, session_manager: Sessio
     logger.info(f"Download requested: session={session_id}, file_type={file_type}, path={file_path}")
 
     return FileResponse(path=str(file_path), media_type=media_type, filename=filename)
+@app.get("/status/{session_id}")
+async def get_session_status(session_id: str, session_manager: SessionManager = Depends(get_session_manager)):
+    session = await session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {
+        "session_id": session_id,
+        "status": session.status,
+        "error": session.error
+    }
+
+@app.get("/result/{session_id}")
+async def get_session_result(session_id: str, session_manager: SessionManager = Depends(get_session_manager)):
+    session = await session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if session.status != "completed":
+        raise HTTPException(status_code=409, detail=f"Session not completed (status: {session.status})")
+    if not session.result:
+        raise HTTPException(status_code=404, detail="Result not available")
+    return session.result
+
 @app.get("/health", status_code=200)
 async def health_check():
     return {"status": "ok"}

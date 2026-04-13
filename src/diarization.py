@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 import librosa
 import numpy as np
 from config.app_config import get_config
+from src.executor import ml_executor
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -76,7 +77,7 @@ class PyannoteDiarizer:
 
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None,
+            ml_executor,
             self._process_diarization_sync,
             audio_path,
             transcription_segments
