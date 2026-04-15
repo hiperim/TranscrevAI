@@ -1,6 +1,8 @@
 # Setup Scripts Directory
 
-This directory contains scripts for building Docker images, downloading models, and setting up SSL certificates.
+This directory contains scripts for building Docker images, downloading models, and setting up local SSL certificates.
+
+> **SSL certificates here are only needed if you want to run the app locally with HTTPS (`https://localhost`).** For normal use via `http://localhost:8000`, or when SSL is handled by an external proxy, you can ignore the SSL-related files (`setup_dev_certs.bat`, `SSL_SETUP.md`).
 
 ---
 

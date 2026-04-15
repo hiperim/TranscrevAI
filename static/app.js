@@ -230,6 +230,8 @@ class LiveRecorder {
             this.resetTimer();  // Reset timer for new recording
             this.startTimer();
             this.updateStatus('Gravando...', 'recording');
+            const scrollHint = document.getElementById('scroll-hint');
+            if (scrollHint) scrollHint.classList.add('visible');
         } catch (error) {
             console.error('Error starting recording:', error);
             this.updateStatus('Erro ao acessar microfone', 'error');
@@ -619,7 +621,9 @@ function showResults(data, sessionId) {
     `;
 
     transcriptionResults.innerHTML = '';
-    if (data.segments && Array.isArray(data.segments)) {
+    const hasSegments = data.segments && Array.isArray(data.segments) && data.segments.length > 0;
+
+    if (hasSegments) {
         data.segments.forEach(function(segment) {
             const segmentDiv = document.createElement('div');
             segmentDiv.className = 'segment';
@@ -630,11 +634,21 @@ function showResults(data, sessionId) {
             `;
             transcriptionResults.appendChild(segmentDiv);
         });
+    } else {
+        const noSpeechDiv = document.createElement('div');
+        noSpeechDiv.className = 'no-speech-notice';
+        noSpeechDiv.textContent = 'Nenhum falante ou segmento de fala detectado nesta gravação.';
+        transcriptionResults.appendChild(noSpeechDiv);
     }
 
     if (downloadBtn) {
-        downloadBtn.onclick = () => downloadSRT(sessionId);
-        downloadBtn.disabled = false;
+        if (hasSegments) {
+            downloadBtn.onclick = () => downloadSRT(sessionId);
+            downloadBtn.disabled = false;
+        } else {
+            downloadBtn.disabled = true;
+            downloadBtn.title = 'Nenhum segmento de fala detectado';
+        }
     }
 
     results.classList.add('show');

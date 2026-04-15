@@ -1,10 +1,10 @@
-# TranscrevAI - Configuração SSL
+# TranscrevAI - Configuração HTTPS Local
 
-Guia completo para configurar HTTPS no TranscrevAI em ambientes de desenvolvimento e produção.
+Este guia é para quem quer rodar o TranscrevAI localmente com HTTPS (`https://localhost`). Para uso normal via `http://localhost:8000`, ou quando o SSL é gerenciado por um proxy externo, este guia não é necessário.
 
-## Por que HTTPS é necessário?
+## Quando isso é necessário?
 
-A API `getUserMedia()` do navegador (usada para captura de áudio ao vivo) **requer HTTPS** para funcionar, exceto em `localhost` não-SSL. Para garantir funcionamento consistente e testar em ambiente real, usamos HTTPS mesmo em desenvolvimento.
+A API `getUserMedia()` do navegador (usada para captura de áudio ao vivo) **requer HTTPS** em alguns contextos. Se você precisar testar a gravação ao vivo com HTTPS diretamente no localhost, siga este guia.
 
 ---
 

@@ -15,7 +15,7 @@
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('recording')">
-                Gravação Ao Vivo
+                Gravação ao Vivo
             </div>
             <div class="tab" onclick="switchTab('upload')">
                 Upload de Arquivo
@@ -34,12 +34,12 @@
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="audio-format" value="mp4">
-                            <span>MP4 (Vídeo - visualizar com legenda .srt)</span>
+                            <span>MP4 (visualizar com legenda .srt)</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="button-row">
+                <div class="button-row recording-controls">
                     <button class="button button-primary" id="start-live-btn">
                         Iniciar Gravação
                     </button>
@@ -56,10 +56,12 @@
 
                 <div class="center">
                     <div id="recording-timer" class="timer">00:00</div>
+                    <div class="timer-max">(10:00 máx.)</div>
                 </div>
 
                 <div class="center mb-2">
                     <div id="live-status" class="status-indicator">Desconectado</div>
+                    <p id="scroll-hint" class="scroll-hint"><span class="scroll-arrow">⬇</span> Role para baixo para visualizar os resultados</p>
                 </div>
             </div>
         </div>
@@ -71,6 +73,7 @@
                 <div class="file-drop-zone" onclick="document.getElementById('file-input').click()">
                     <p><strong>Clique aqui ou arraste um arquivo de áudio</strong></p>
                     <p>Formatos suportados: WAV, MP3, M4A, FLAC, OGG</p>
+                    <p class="upload-limits">Tamanho máx. 100MB &nbsp;·&nbsp; Duração máx. 10min</p>
                     <input type="file" id="file-input" class="file-input" accept=".wav,.mp3,.m4a,.flac,.ogg">
                 </div>
 

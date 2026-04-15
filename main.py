@@ -6,11 +6,12 @@ import time
 import uuid
 import hashlib
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import torch
 import uvicorn
 from fastapi import (FastAPI, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Depends, HTTPException)
 from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -23,6 +24,26 @@ from src.file_manager import FileManager
 from src.pipeline import process_audio_pipeline
 from src.exceptions import TranscriptionError, DiarizationError, AudioProcessingError, SessionError, ValidationError
 from config.app_config import get_config
+
+# --- Pydantic response models
+class UploadResponse(BaseModel):
+    success: bool
+    session_id: str
+
+class StatusResponse(BaseModel):
+    session_id: str
+    status: str
+    error: Optional[str] = None
+
+class ResultResponse(BaseModel):
+    segments: List[Dict[str, Any]]
+    num_speakers: int
+    processing_time: float
+    processing_ratio: float
+    audio_duration: float
+
+class HealthResponse(BaseModel):
+    status: str
 
 # --- Global Configuration & Tuning
 app_config = get_config()
@@ -126,7 +147,7 @@ async def read_root(request: Request):
         "static_hashes": STATIC_HASHES
     })
 
-@app.post("/upload")
+@app.post("/upload", response_model=UploadResponse, summary="Upload audio file for transcription")
 @limiter.limit("10/minute")
 async def upload_audio(
     request: Request,
@@ -166,7 +187,7 @@ async def upload_audio(
                 Path(file_path).unlink(missing_ok=True)
                 raise HTTPException(
                     status_code=413,
-                    detail=f"Áudio muito longo. Duração máxima: 60 minutos. Duração: {duration/60:.1f} min"
+                    detail=f"Áudio muito longo. Duração máxima: 10 minutos. Duração: {duration/60:.1f} min"
                 )
         except HTTPException:
             raise
@@ -201,7 +222,7 @@ async def upload_audio(
         await session_manager.remove_session(session_id)
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-@app.get("/download-srt/{session_id}")
+@app.get("/download-srt/{session_id}", summary="Download SRT subtitle file")
 async def download_srt(session_id: str, session_manager: SessionManager = Depends(get_session_manager)):
     session = await session_manager.get_session(session_id)
     
@@ -213,7 +234,7 @@ async def download_srt(session_id: str, session_manager: SessionManager = Depend
     
     return FileResponse(path=srt_path, filename=f"transcription_{session_id}.srt", media_type="application/x-subrip")
 
-@app.get("/api/download/{session_id}/{file_type}")
+@app.get("/api/download/{session_id}/{file_type}", summary="Download processed file by type (audio, transcript, subtitles)")
 async def download_file(session_id: str, file_type: str, session_manager: SessionManager = Depends(get_session_manager)):
     valid_types = ['audio', 'transcript', 'subtitles']
     if file_type not in valid_types:
@@ -259,7 +280,7 @@ async def download_file(session_id: str, file_type: str, session_manager: Sessio
     logger.info(f"Download requested: session={session_id}, file_type={file_type}, path={file_path}")
 
     return FileResponse(path=str(file_path), media_type=media_type, filename=filename)
-@app.get("/status/{session_id}")
+@app.get("/status/{session_id}", response_model=StatusResponse, summary="Get processing status for a session")
 async def get_session_status(session_id: str, session_manager: SessionManager = Depends(get_session_manager)):
     session = await session_manager.get_session(session_id)
     if not session:
@@ -270,7 +291,7 @@ async def get_session_status(session_id: str, session_manager: SessionManager = 
         "error": session.error
     }
 
-@app.get("/result/{session_id}")
+@app.get("/result/{session_id}", response_model=ResultResponse, summary="Get transcription result for a completed session")
 async def get_session_result(session_id: str, session_manager: SessionManager = Depends(get_session_manager)):
     session = await session_manager.get_session(session_id)
     if not session:
@@ -281,7 +302,7 @@ async def get_session_result(session_id: str, session_manager: SessionManager = 
         raise HTTPException(status_code=404, detail="Result not available")
     return session.result
 
-@app.get("/health", status_code=200)
+@app.get("/health", response_model=HealthResponse, summary="Health check")
 async def health_check():
     return {"status": "ok"}
 

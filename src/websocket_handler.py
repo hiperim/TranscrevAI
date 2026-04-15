@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Limits for live recording
 MAX_RECORDING_DURATION = 600  # 10 min
-MAX_FILE_SIZE = 100 * 1024 * 1024  # 500mb
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100mb
 
 class WebSocketValidator:
 
