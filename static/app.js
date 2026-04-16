@@ -348,6 +348,7 @@ class LiveRecorder {
 
     handleTranscriptionComplete(result) {
         this.updateStatus('Concluído!', 'success');
+        showStatus('Processamento concluído!', 100);
         this.recordingState = 'idle';
         this.isStopping = false; // Reset flag for next recording
         this.updateButtonStates();
