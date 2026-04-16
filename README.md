@@ -1,5 +1,8 @@
 # TranscrevAI
 
+<img width="577" height="1030" alt="TranscrevAI_preview" src="https://github.com/user-attachments/assets/60c74d79-57e4-4378-8045-45940e19355f" />
+
+
 ## Visão Geral
 
 O TranscrevAI é uma aplicação de alto desempenho para transcrição de áudio e diarização de locutores. Ela recebe um áudio como entrada e fornece uma transcrição completa, identificando quem disse o quê e quando. Foi projetada para ser uma ferramenta poderosa para quem precisa de transcrições rápidas e precisas de conversas, reuniões ou gravações.
