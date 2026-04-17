@@ -236,8 +236,80 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
     # Find speakers detected by pyannote but not assigned to any transcription segment
     unassigned_speakers = speakers_found - assigned_speakers_original
 
-    if unassigned_speakers:
-        logger.info(f"Found {len(unassigned_speakers)} unassigned speakers: {sorted(unassigned_speakers)} — marking as [inaudível]")
+    if unassigned_speakers and audio_path:
+        logger.info(f"Found {len(unassigned_speakers)} unassigned speakers: {sorted(unassigned_speakers)}")
+        logger.info("Attempting pitch-based re-attribution")
+
+        # Extract pitch for assigned speakers
+        speaker_pitches = {}
+        for seg in transcription_segments:
+            if seg.get('speaker') and seg['speaker'] != 'SPEAKER_XX':
+                pitch = extract_pitch(audio_path, seg['start'], seg['end'])
+                if pitch:
+                    if seg['speaker'] not in speaker_pitches:
+                        speaker_pitches[seg['speaker']] = []
+                    speaker_pitches[seg['speaker']].append(pitch)
+
+        # Calculate median pitch per speaker
+        speaker_median_pitch = {spk: np.median(pitches) for spk, pitches in speaker_pitches.items() if len(pitches) > 0}
+        logger.info(f"Speaker pitches: {speaker_median_pitch}")
+
+        for speaker in sorted(unassigned_speakers):
+            speaker_segments = [seg for seg in diarization_segments if seg['speaker'] == speaker]
+            for dia_seg in speaker_segments:
+                # Try pitch matching
+                pitch = extract_pitch(audio_path, dia_seg['start'], dia_seg['end'])
+                best_match = None
+
+                if pitch and speaker_median_pitch:
+                    min_diff = float('inf')
+                    for spk, med_pitch in speaker_median_pitch.items():
+                        diff = abs(pitch - med_pitch)
+                        if diff < min_diff:
+                            min_diff = diff
+                            best_match = spk
+
+                    # Only re-attribute if difference is reasonable (< 50 Hz)
+                    if min_diff < 50:
+                        logger.info(f"  Pitch match: {speaker_mapping.get(speaker, speaker)} → {best_match} (diff: {min_diff:.1f}Hz)")
+                        # Find and update existing segment or add
+                        for seg in transcription_segments:
+                            if abs(seg['start'] - dia_seg['start']) < 0.5 and seg.get('speaker') == best_match:
+                                logger.info(f"  Merged into existing {best_match} segment")
+                                break
+                        else:
+                            mapped_spk = speaker_mapping.get(speaker, speaker)
+                            final_spk = final_mapping.get(mapped_spk, mapped_spk)
+                            synthetic_segment = {
+                                'start': dia_seg['start'],
+                                'end': dia_seg['end'],
+                                'text': '[inaudível]',
+                                'speaker': final_spk,
+                                'avg_logprob': -1.0,
+                                'words': []
+                            }
+                            transcription_segments.append(synthetic_segment)
+                        continue
+
+                # Fallback: add as [inaudível] with final mapping
+                mapped_spk = speaker_mapping.get(speaker, speaker)
+                final_spk = final_mapping.get(mapped_spk, mapped_spk)
+                synthetic_segment = {
+                    'start': dia_seg['start'],
+                    'end': dia_seg['end'],
+                    'text': '[inaudível]',
+                    'speaker': final_spk,
+                    'avg_logprob': -1.0,
+                    'words': []
+                }
+                transcription_segments.append(synthetic_segment)
+                logger.info(f"  Added [inaudível] for {final_spk} at {dia_seg['start']:.2f}-{dia_seg['end']:.2f}s")
+
+        # Sort segments by start time
+        transcription_segments.sort(key=lambda x: x['start'])
+
+    elif unassigned_speakers:
+        logger.info(f"Found {len(unassigned_speakers)} unassigned speakers but no audio_path for pitch tracking")
         for speaker in sorted(unassigned_speakers):
             speaker_segments = [seg for seg in diarization_segments if seg['speaker'] == speaker]
             for dia_seg in speaker_segments:
@@ -252,7 +324,6 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
                     'words': []
                 }
                 transcription_segments.append(synthetic_segment)
-                logger.info(f"  Added [inaudível] for {final_spk} at {dia_seg['start']:.2f}-{dia_seg['end']:.2f}s")
         transcription_segments.sort(key=lambda x: x['start'])
 
     logger.info("Speaker alignment completed successfully")

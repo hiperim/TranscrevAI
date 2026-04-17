@@ -632,10 +632,11 @@ function showResults(data, sessionId) {
     `;
 
     transcriptionResults.innerHTML = '';
-    const hasSegments = data.segments && Array.isArray(data.segments) && data.segments.length > 0;
+    const visibleSegments = (data.segments || []).filter(s => s.text && s.text !== '[inaudível]');
+    const hasSegments = visibleSegments.length > 0;
 
     if (hasSegments) {
-        data.segments.forEach(function(segment) {
+        visibleSegments.forEach(function(segment) {
             const segmentDiv = document.createElement('div');
             segmentDiv.className = 'segment';
             segmentDiv.innerHTML = `
@@ -645,6 +646,18 @@ function showResults(data, sessionId) {
             `;
             transcriptionResults.appendChild(segmentDiv);
         });
+
+        // Aviso discreto se houver falantes detectados sem fala transcrita
+        const speakersInSegments = new Set(visibleSegments.map(s => s.speaker).filter(Boolean)).size;
+        const silentSpeakers = (data.num_speakers || 0) - speakersInSegments;
+        if (silentSpeakers > 0) {
+            const notice = document.createElement('p');
+            notice.className = 'timer-max';
+            notice.style.textAlign = 'left';
+            notice.style.marginTop = '12px';
+            notice.textContent = `*${String(silentSpeakers).padStart(2, '0')} falante(s) detectado(s) sem fala transcrita — pode indicar música ou ruído de fundo.`;
+            transcriptionResults.appendChild(notice);
+        }
     } else {
         const noSpeechDiv = document.createElement('div');
         noSpeechDiv.className = 'no-speech-notice';
