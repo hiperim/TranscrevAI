@@ -230,8 +230,6 @@ class LiveRecorder {
             this.resetTimer();  // Reset timer for new recording
             this.startTimer();
             this.updateStatus('Gravando...', 'recording');
-            const scrollHint = document.getElementById('scroll-hint');
-            if (scrollHint) scrollHint.classList.add('visible');
         } catch (error) {
             console.error('Error starting recording:', error);
             this.updateStatus('Erro ao acessar microfone', 'error');
@@ -653,6 +651,7 @@ function showResults(data, sessionId) {
     }
 
     results.classList.add('show');
+    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function formatTime(seconds) {

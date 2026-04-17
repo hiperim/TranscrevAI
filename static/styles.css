@@ -507,23 +507,6 @@ h1 {
     margin: 16px 0;
 }
 
-/* scroll hint - visible only after recording starts */
-.scroll-hint {
-    display: none;
-    font-size: 0.75rem;
-    color: #606060;
-    margin-top: 8px;
-    text-align: center;
-}
-
-.scroll-hint.visible {
-    display: block;
-}
-
-.scroll-arrow {
-    font-size: 1rem;
-}
-
 /* format description - hidden on small screens */
 .format-desc {
     color: #808080;
