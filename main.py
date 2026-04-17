@@ -399,6 +399,7 @@ async def websocket_endpoint(
             # --- Handling
             if action == "start":
                 current_session_data.format = message.get("format", "wav").lower()
+                current_session_data.mime_type = message.get("mime_type", "audio/webm")
 
                 start_result = await loop.run_in_executor(None, live_audio_processor.start_recording, session_id, 16000)
 
@@ -438,8 +439,8 @@ async def websocket_endpoint(
                     "message": "Gravação finalizada. Processando áudio gravado..."
                 })
 
-                # Stop recording and get WAV path (converts WebM → WAV)
-                wav_path = await loop.run_in_executor(None, live_audio_processor.stop_recording, session_id)
+                # Stop recording and get WAV path (converts audio → WAV)
+                wav_path = await loop.run_in_executor(None, live_audio_processor.stop_recording, session_id, getattr(current_session_data, 'mime_type', 'audio/webm'))
                 current_session_data.temp_file = wav_path
 
                 if not wav_path or not os.path.exists(wav_path):

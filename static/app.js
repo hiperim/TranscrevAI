@@ -203,7 +203,19 @@ class LiveRecorder {
             console.log('[DEBUG] Requesting microphone access...');
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             console.log('[DEBUG] Microphone access granted');
-            this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+            const supportedMimeTypes = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/mp4',
+                'audio/ogg;codecs=opus',
+                ''
+            ];
+            const mimeType = supportedMimeTypes.find(type => type === '' || MediaRecorder.isTypeSupported(type)) || '';
+            this.detectedMimeType = mimeType;
+            this.mediaRecorder = mimeType
+                ? new MediaRecorder(stream, { mimeType })
+                : new MediaRecorder(stream);
+            console.log('[DEBUG] MediaRecorder mimeType:', mimeType || '(browser default)');
 
             this.mediaRecorder.ondataavailable = async (event) => {
                 if (this.isStopping) return; // Don't send chunks after stop
@@ -224,7 +236,7 @@ class LiveRecorder {
 
             const chunkDurationMs = 5000; // Send chunks every 5 seconds
             this.mediaRecorder.start(chunkDurationMs); // Start recording with chunk interval
-            this.ws.send(JSON.stringify({ action: 'start', format: audioFormat }));
+            this.ws.send(JSON.stringify({ action: 'start', format: audioFormat, mime_type: this.detectedMimeType || 'audio/webm' }));
             this.recordingState = 'recording';
             this.updateButtonStates();
             this.resetTimer();  // Reset timer for new recording

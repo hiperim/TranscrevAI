@@ -358,9 +358,9 @@ class LiveAudioProcessor:
                 "total_bytes": session["total_bytes"]
             }
 
-    def stop_recording(self, session_id: str) -> str:
+    def stop_recording(self, session_id: str, mime_type: str = 'audio/webm') -> str:
         """
-        Stop recording, convert WebM to WAV, and return path for processing.
+        Stop recording, convert audio to WAV, and return path for processing.
         Transitions to PROCESSING state.
         """
         with self._lock:
@@ -385,25 +385,32 @@ class LiveAudioProcessor:
             audio_data = b''.join(audio_buffer)
             temp_file_path = str(session.get("temp_file"))
 
-            # Write raw WebM data to temporary file
-            webm_temp = temp_file_path.replace('.wav', '_raw.webm')
-            with open(webm_temp, 'wb') as f:
+            # Determine raw file extension based on mime_type
+            if 'mp4' in mime_type:
+                raw_ext = '_raw.mp4'
+            elif 'ogg' in mime_type:
+                raw_ext = '_raw.ogg'
+            else:
+                raw_ext = '_raw.webm'
+
+            raw_temp = temp_file_path.replace('.wav', raw_ext)
+            with open(raw_temp, 'wb') as f:
                 f.write(audio_data)
 
-            logger.info(f"WebM data written: {len(audio_data)} bytes to {webm_temp}")
+            logger.info(f"Audio data written: {len(audio_data)} bytes to {raw_temp} (mime: {mime_type})")
 
-            # Convert WebM to WAV using FFMPEG
+            # Convert to WAV using FFMPEG
             try:
-                self._convert_webm_to_wav(webm_temp, temp_file_path, session.get("sample_rate", 16000))
-                logger.info(f"Successfully converted WebM to WAV: {temp_file_path}")
+                self._convert_to_wav(raw_temp, temp_file_path, session.get("sample_rate", 16000))
+                logger.info(f"Successfully converted audio to WAV: {temp_file_path}")
 
-                # Clean up temporary WebM file
-                Path(webm_temp).unlink(missing_ok=True)
+                # Clean up temporary raw file
+                Path(raw_temp).unlink(missing_ok=True)
 
             except Exception as e:
-                logger.error(f"Failed to convert WebM to WAV: {e}")
+                logger.error(f"Failed to convert audio to WAV: {e}")
                 # Clean up
-                Path(webm_temp).unlink(missing_ok=True)
+                Path(raw_temp).unlink(missing_ok=True)
                 raise ValueError(f"Audio conversion failed: {e}")
 
             # Clear buffer to free memory
@@ -414,8 +421,8 @@ class LiveAudioProcessor:
 
             return temp_file_path
 
-    def _convert_webm_to_wav(self, input_path: str, output_path: str, sample_rate: int = 16000):
-        """Convert WebM audio to WAV using FFMPEG"""
+    def _convert_to_wav(self, input_path: str, output_path: str, sample_rate: int = 16000):
+        """Convert audio (WebM/MP4/OGG) to WAV using FFMPEG"""
         try:
             # Try using static_ffmpeg first
             try:
