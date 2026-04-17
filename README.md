@@ -1,9 +1,6 @@
 # TranscrevAI - Transcrição e diarização de áudio 100% local, sem APIs externas
 
-  <p align="center">
-    <img width="577" height="1030" alt="TranscrevAI_preview" src="https://github.co
-  m/user-attachments/assets/60c74d79-57e4-4378-8045-45940e19355f" />
-  </p>
+<img width="577" height="1030" alt="TranscrevAI_preview" src="https://github.com/user-attachments/assets/60c74d79-57e4-4378-8045-45940e19355f" />
 
 
 ## Visão Geral
