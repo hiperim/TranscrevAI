@@ -631,6 +631,15 @@ function showResults(data, sessionId) {
         <div class="stat-card"><div class="stat-value">${data.processing_ratio ? data.processing_ratio + 'x' : 'N/A'}</div><div class="stat-label">Ratio</div></div>
     `;
 
+    if (data.diarization_warning) {
+        const warningDiv = document.createElement('p');
+        warningDiv.className = 'timer-max';
+        warningDiv.style.textAlign = 'left';
+        warningDiv.style.marginTop = '12px';
+        warningDiv.textContent = data.diarization_warning;
+        stats.after(warningDiv);
+    }
+
     transcriptionResults.innerHTML = '';
     const visibleSegments = (data.segments || []).filter(s => s.text && s.text !== '[inaudível]');
     const hasSegments = visibleSegments.length > 0;

@@ -57,7 +57,10 @@ class PyannoteDiarizer:
 
             self.pipeline.instantiate(instantiate_params)
             logger.info(f"Pipeline instantiated with threshold={config.diarization_threshold}, min_cluster_size={config.diarization_min_cluster_size}")
-            logger.info(f"Pipeline instantiated with threshold={config.diarization_threshold}, min_cluster_size={config.diarization_min_cluster_size}")
+
+            # Reduce segmentation window for better short-audio speaker detection
+            self.pipeline._segmentation.duration = config.diarization_segmentation_duration
+            logger.info(f"Segmentation duration set to {config.diarization_segmentation_duration}s (model default: 10.0s)")
 
             # Move to device and set batch size
             self.pipeline.to(torch.device(self.device))

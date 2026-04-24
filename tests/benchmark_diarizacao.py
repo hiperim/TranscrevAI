@@ -41,7 +41,8 @@ def get_git_info():
 
 def get_diarization_params():
     try:
-        from config.app_config import config
+        from config.app_config import get_config
+        config = get_config()
         return {
             "diarization_threshold": config.diarization_threshold,
             "diarization_min_cluster_size": config.diarization_min_cluster_size,
@@ -161,7 +162,7 @@ async def run_benchmark():
     await svc.initialize()
     result = await svc.transcribe_with_enhancements(str(AUDIO_PATH), word_timestamps=True)
     transcription_time = time.time() - t0
-    raw_segments = result.segments if hasattr(result, "segments") else result.get("segments", [])
+    raw_segments = result.segments if hasattr(result, "segments") else (result.get("segments", []) if isinstance(result, dict) else [])
     print(f"  Concluído em {transcription_time:.1f}s — {len(raw_segments)} segmentos")
 
     # Diarização

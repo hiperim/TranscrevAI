@@ -47,6 +47,7 @@ class AppConfig:
     diarization_min_speakers: Optional[int] = None
     diarization_max_speakers: Optional[int] = None
     diarization_min_cluster_size: int = 12
+    diarization_segmentation_duration: float = 10.0
     
     # --- Logging settings
     log_level: str = "INFO"
@@ -103,13 +104,14 @@ class AppConfig:
             'TRANSCREVAI_DIARIZATION_THRESHOLD': 'diarization_threshold',
             'TRANSCREVAI_DIARIZATION_MIN_SPEAKERS': 'diarization_min_speakers',
             'TRANSCREVAI_DIARIZATION_MAX_SPEAKERS': 'diarization_max_speakers',
-            'TRANSCREVAI_DIARIZATION_MIN_CLUSTER_SIZE': 'diarization_min_cluster_size'
+            'TRANSCREVAI_DIARIZATION_MIN_CLUSTER_SIZE': 'diarization_min_cluster_size',
+            'TRANSCREVAI_DIARIZATION_SEG_DURATION': 'diarization_segmentation_duration'
         }
         for env_key, attr_name in env_mappings.items():
             env_value = os.getenv(env_key)
             if env_value:
                 try:
-                    if attr_name in ['max_memory_gb', 'diarization_threshold']:
+                    if attr_name in ['max_memory_gb', 'diarization_threshold', 'diarization_segmentation_duration']:
                         setattr(self, attr_name, float(env_value))
                     elif attr_name in ['port', 'diarization_min_speakers', 'diarization_max_speakers', 'diarization_min_cluster_size']:
                         setattr(self, attr_name, int(env_value) if env_value.lower() != 'none' else None)

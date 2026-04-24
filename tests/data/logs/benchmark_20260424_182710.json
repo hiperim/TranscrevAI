@@ -1,0 +1,105 @@
+{
+  "timestamp": "2026-04-24T18:27:10.337128",
+  "git": {
+    "commit": "b38613e017a5ba35bd9b74d33b462bf4dcfefeef",
+    "branch": "diarizacao-2",
+    "uncommitted_changes": true
+  },
+  "diarization_params": {},
+  "audio_file": "teste_live_1.wav",
+  "audio_duration_sec": 16.56,
+  "processing_time_sec": 27.38,
+  "speed_ratio": 1.65,
+  "transcription": {
+    "wer_traditional": 0.0741,
+    "wer_normalized": 0.0741,
+    "accuracy_normalized_percent": 92.6
+  },
+  "diarization": {
+    "speakers_expected": 3,
+    "speakers_detected": 8,
+    "speaker_accuracy_percent": 50.0,
+    "correct_segments": 3,
+    "total_segments": 6,
+    "best_label_mapping": {
+      "SPEAKER_01": "SPEAKER_02",
+      "SPEAKER_02": "SPEAKER_01",
+      "SPEAKER_03": "SPEAKER_03"
+    },
+    "ref_speakers": [
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03"
+    ],
+    "hyp_speakers": [
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03",
+      "SPEAKER_04",
+      "SPEAKER_06",
+      "SPEAKER_08"
+    ]
+  },
+  "hypothesis_segments": [
+    {
+      "start": 0.0,
+      "end": 4.52,
+      "speaker": "SPEAKER_01",
+      "text": " Então, ele já está gravando o que eu estou falando, talvez se você falar alguma coisa..."
+    },
+    {
+      "start": 2.03909375,
+      "end": 2.49471875,
+      "speaker": "SPEAKER_02",
+      "text": "[inaudível]"
+    },
+    {
+      "start": 2.83221875,
+      "end": 4.03034375,
+      "speaker": "SPEAKER_02",
+      "text": "[inaudível]"
+    },
+    {
+      "start": 4.52,
+      "end": 7.82,
+      "speaker": "SPEAKER_02",
+      "text": " Ele não vai reconhecer a minha voz e vai dar alguma coisa diferente, talvez?"
+    },
+    {
+      "start": 8.04,
+      "end": 9.0,
+      "speaker": "SPEAKER_02",
+      "text": " Eu acho que não."
+    },
+    {
+      "start": 9.38,
+      "end": 15.14,
+      "speaker": "SPEAKER_03",
+      "text": " O certo seria ele dividir as duas vozes em Speaker 1, que sou eu, e Speaker 2, que é você."
+    },
+    {
+      "start": 9.970343750000001,
+      "end": 10.98284375,
+      "speaker": "SPEAKER_04",
+      "text": "[inaudível]"
+    },
+    {
+      "start": 13.969718750000002,
+      "end": 14.982218750000001,
+      "speaker": "SPEAKER_06",
+      "text": "[inaudível]"
+    },
+    {
+      "start": 15.24,
+      "end": 16.26,
+      "speaker": "SPEAKER_04",
+      "text": " Vamos testar aqui agora."
+    },
+    {
+      "start": 15.977843750000002,
+      "end": 16.28159375,
+      "speaker": "SPEAKER_08",
+      "text": "[inaudível]"
+    }
+  ]
+}

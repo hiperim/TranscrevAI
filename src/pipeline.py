@@ -66,12 +66,18 @@ async def process_audio_pipeline(audio_path: str, session_id: str) -> None:
                     logger.warning(f"Could not send error to {session_id} (WebSocket closed)")
         return
 
+    diarization_warning = (
+        f"*Áudio curto detectado ({round(audio_duration)}s). A diarização pode ser menos precisa em gravações abaixo de 60s."
+        if audio_duration < 60 else None
+    )
+
     final_result = {
         "segments": diarization_result["segments"],
         "num_speakers": diarization_result["num_speakers"],
         "processing_time": round(actual_processing_time, 2),
         "processing_ratio": round(processing_ratio, 2),
-        "audio_duration": round(audio_duration, 2)
+        "audio_duration": round(audio_duration, 2),
+        "diarization_warning": diarization_warning
     }
 
     try:
