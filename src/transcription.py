@@ -182,6 +182,7 @@ class TranscriptionService:
             # Prepare args
             transcribe_args = {
                 "language": "pt",
+                "task": "transcribe",
                 "beam_size": 3,
                 "best_of": 3,
                 "word_timestamps": word_timestamps,
