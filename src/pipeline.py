@@ -67,7 +67,7 @@ async def process_audio_pipeline(audio_path: str, session_id: str) -> None:
         return
 
     diarization_warning = (
-        f"*Áudio curto detectado ({round(audio_duration)}s). A diarização pode ser menos precisa em gravações abaixo de 60s."
+        f"*Áudio curto detectado ({round(audio_duration):02d}s). A diarização pode ser menos precisa em gravações abaixo de 60s."
         if audio_duration < 60 else None
     )
 

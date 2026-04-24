@@ -631,15 +631,6 @@ function showResults(data, sessionId) {
         <div class="stat-card"><div class="stat-value">${data.processing_ratio ? data.processing_ratio + 'x' : 'N/A'}</div><div class="stat-label">Ratio</div></div>
     `;
 
-    if (data.diarization_warning) {
-        const warningDiv = document.createElement('p');
-        warningDiv.className = 'timer-max';
-        warningDiv.style.textAlign = 'left';
-        warningDiv.style.marginTop = '12px';
-        warningDiv.textContent = data.diarization_warning;
-        stats.after(warningDiv);
-    }
-
     transcriptionResults.innerHTML = '';
     const visibleSegments = (data.segments || []).filter(s => s.text && s.text !== '[inaudível]');
     const hasSegments = visibleSegments.length > 0;
@@ -666,6 +657,15 @@ function showResults(data, sessionId) {
             notice.style.marginTop = '12px';
             notice.textContent = `*${String(silentSpeakers).padStart(2, '0')} falante(s) detectado(s) sem fala transcrita — pode indicar música ou ruído de fundo.`;
             transcriptionResults.appendChild(notice);
+        }
+
+        if (data.diarization_warning) {
+            const warningDiv = document.createElement('p');
+            warningDiv.className = 'timer-max';
+            warningDiv.style.textAlign = 'left';
+            warningDiv.style.marginTop = '8px';
+            warningDiv.textContent = data.diarization_warning;
+            transcriptionResults.appendChild(warningDiv);
         }
     } else {
         const noSpeechDiv = document.createElement('div');
