@@ -20,8 +20,7 @@ class SRTGenerator:
         
         # .srt formatting parameters
         self.max_line_length = 42
-        self.max_lines_per_subtitle = 2
-        self.min_subtitle_duration = 0.5  
+self.min_subtitle_duration = 0.5  
         self.max_subtitle_duration = 6.0  
         
         # PT-BR specific character handling
@@ -141,32 +140,6 @@ class SRTGenerator:
         
         return lines
 
-    def _optimize_line_breaks(self, lines: List[str]) -> List[str]:
-        """Optimize line breaks for better readability in PT-BR"""
-        if len(lines) <= self.max_lines_per_subtitle:
-            return lines
-        
-        # Combine shorter lines while respecting max line length
-        optimized = []
-        i = 0
-        
-        while i < len(lines):
-            current_line = lines[i]
-            
-            # If possible, try to combine with next line
-            if i + 1 < len(lines):
-                next_line = lines[i + 1]
-                combined = f"{current_line} {next_line}"
-                
-                if len(combined) <= self.max_line_length:
-                    optimized.append(combined)
-                    i += 2  # Skip next line
-                    continue
-            
-            optimized.append(current_line)
-            i += 1
-        
-        return optimized
 
     def _create_srt_content(self, segments: List[Dict[str, Any]]) -> str:
         """Create .srt content from segments with UTF-8 encoding"""
