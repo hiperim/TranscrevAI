@@ -58,10 +58,6 @@ class PyannoteDiarizer:
             self.pipeline.instantiate(instantiate_params)
             logger.info(f"Pipeline instantiated with threshold={config.diarization_threshold}, min_cluster_size={config.diarization_min_cluster_size}")
 
-            # Reduce segmentation window for better short-audio speaker detection
-            self.pipeline._segmentation.duration = config.diarization_segmentation_duration
-            logger.info(f"Segmentation duration set to {config.diarization_segmentation_duration}s (model default: 10.0s)")
-
             # Move to device and set batch size
             self.pipeline.to(torch.device(self.device))
             self.pipeline.embedding_batch_size = self.embedding_batch_size
@@ -96,8 +92,6 @@ class PyannoteDiarizer:
             diarization_result = self.pipeline(audio_path)
             num_speakers = len(diarization_result.labels())
             logger.info(f"pyannote.audio detected {num_speakers} speakers")
-            for turn, _, speaker in diarization_result.itertracks(yield_label=True):
-                logger.info(f"  RAW: {speaker} {turn.start:.2f}s → {turn.end:.2f}s")
 
             aligned_segments = align_speakers_by_word(transcription_segments, diarization_result, audio_path)
             result = {"segments": aligned_segments, "num_speakers": int(num_speakers)}
@@ -171,7 +165,7 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
         if 'words' not in segment or not segment['words']:
             # Fallback: use segment midpoint if no word timestamps
             mid_timestamp = (segment['start'] + segment['end']) / 2
-            speaker = find_speaker_at_timestamp(mid_timestamp, margin=0.5)
+            speaker = find_speaker_at_timestamp(mid_timestamp, margin=1.0)
             if speaker:
                 segment['speaker'] = speaker_mapping.get(speaker, speaker)
             else:
@@ -183,11 +177,7 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
         word_speaker_counts: Dict[str, int] = {}
         for word in segment['words']:
             word_mid = (word['start'] + word['end']) / 2
-            speaker = find_speaker_at_timestamp(word_mid, margin=0.3)
-
-            # Debug logging for first segment only
-            if segment == transcription_segments[0] and len(word_speaker_counts) < 3:
-                logger.info(f"  Word '{word.get('word', '?')}' at {word_mid:.2f}s → speaker: {speaker}")
+            speaker = find_speaker_at_timestamp(word_mid, margin=1.0)
 
             if speaker:
                 word['speaker'] = speaker_mapping.get(speaker, speaker)

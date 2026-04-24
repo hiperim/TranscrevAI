@@ -5,8 +5,6 @@ import logging
 from fastapi import WebSocket
 from src.error_messages import get_user_message
 from src.exceptions import ValidationError, SessionError, AudioProcessingError
-import os
-
 # Import pipeline function
 from src.pipeline import process_audio_pipeline
 
@@ -14,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 # Limits for live recording
 MAX_RECORDING_DURATION = 600  # 10 min
-MAX_FILE_SIZE = 100 * 1024 * 1024  # 100mb
 
 class WebSocketValidator:
 

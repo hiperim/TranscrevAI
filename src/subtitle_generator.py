@@ -20,8 +20,8 @@ class SRTGenerator:
         
         # .srt formatting parameters
         self.max_line_length = 42
-self.min_subtitle_duration = 0.5  
-        self.max_subtitle_duration = 6.0  
+        self.min_subtitle_duration = 0.5
+        self.max_subtitle_duration = 6.0
         
         # PT-BR specific character handling
         self._init_portuguese_formatting()

@@ -2,9 +2,7 @@
 Dependency injection for framework
 """
 import os
-import queue
 import threading
-import asyncio
 from pathlib import Path
 from typing import Optional
 from functools import lru_cache

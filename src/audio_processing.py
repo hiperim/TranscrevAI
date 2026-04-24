@@ -14,7 +14,6 @@ import numpy as np
 import psutil
 from src.file_manager import FileManager
 # Lazy imports for heavy dependencies
-_pyaudio = None
 _librosa = None
 
 logger = logging.getLogger(__name__)
@@ -90,18 +89,6 @@ def configure_adaptive_threads() -> Tuple[int, int]:
     logger.info(f"  Rationale: Transcription (CPU-heavy) gets {omp_pct:.0f}%, Diarization (memory-bound) gets {torch_pct:.0f}%")
 
     return torch_threads, omp_threads
-
-def _get_pyaudio():
-    """Lazy import of PyAudio to avoid import errors if not installed."""
-    global _pyaudio
-    if _pyaudio is None:
-        try:
-            import pyaudio
-            _pyaudio = pyaudio
-        except ImportError:
-            logger.critical("PyAudio is not installed. Live recording will not work.")
-            raise
-    return _pyaudio
 
 def _get_librosa():
     """Lazy import of Librosa for audio analysis."""
@@ -228,9 +215,7 @@ class AudioQualityAnalyzer:
                 warnings.append("AVISO: Qualidade de áudio ruim detectada. Verifique o ambiente e o microfone.")
                 has_issues = True
 
-            # Noise estimation - simple SNR estimate using energy ratio - calculate energy in high-frequency bands (noise) vs. low-frequency (speech)
-            frame_length = 2048
-            hop_length = 512
+            # Noise estimation via spectral rolloff as SNR proxy
             spectral_rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85)[0]
             snr_estimate = np.mean(spectral_rolloff) / (sr / 2)  # Normalized estimate
             if snr_estimate < 0.3:  
