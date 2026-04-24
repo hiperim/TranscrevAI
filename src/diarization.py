@@ -16,6 +16,7 @@ else:
     MODELS_CACHE_DIR = Path(__file__).parent.parent / "models" / ".cache"
     os.environ['HF_HOME'] = str(MODELS_CACHE_DIR)
 
+
 import torch
 from pyannote.audio import Pipeline
 from dotenv import load_dotenv
@@ -43,7 +44,6 @@ class PyannoteDiarizer:
             self.pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-3.1")
             logger.info("Pipeline loaded from local cache.")
 
-
             # Read pipeline's optimized defaults, then override only what we need
             instantiate_params = self.pipeline.parameters(instantiated=True)
             instantiate_params["clustering"]["threshold"] = config.diarization_threshold
@@ -56,6 +56,7 @@ class PyannoteDiarizer:
                 instantiate_params["clustering"]["max_clusters"] = config.diarization_max_speakers
 
             self.pipeline.instantiate(instantiate_params)
+            logger.info(f"Pipeline instantiated with threshold={config.diarization_threshold}, min_cluster_size={config.diarization_min_cluster_size}")
             logger.info(f"Pipeline instantiated with threshold={config.diarization_threshold}, min_cluster_size={config.diarization_min_cluster_size}")
 
             # Move to device and set batch size
@@ -92,6 +93,8 @@ class PyannoteDiarizer:
             diarization_result = self.pipeline(audio_path)
             num_speakers = len(diarization_result.labels())
             logger.info(f"pyannote.audio detected {num_speakers} speakers")
+            for turn, _, speaker in diarization_result.itertracks(yield_label=True):
+                logger.info(f"  RAW: {speaker} {turn.start:.2f}s → {turn.end:.2f}s")
 
             aligned_segments = align_speakers_by_word(transcription_segments, diarization_result, audio_path)
             result = {"segments": aligned_segments, "num_speakers": int(num_speakers)}
@@ -165,7 +168,7 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
         if 'words' not in segment or not segment['words']:
             # Fallback: use segment midpoint if no word timestamps
             mid_timestamp = (segment['start'] + segment['end']) / 2
-            speaker = find_speaker_at_timestamp(mid_timestamp, margin=1)
+            speaker = find_speaker_at_timestamp(mid_timestamp, margin=0.5)
             if speaker:
                 segment['speaker'] = speaker_mapping.get(speaker, speaker)
             else:
@@ -177,7 +180,7 @@ def align_speakers_by_word(transcription_segments: List[Dict[str, Any]], diariza
         word_speaker_counts: Dict[str, int] = {}
         for word in segment['words']:
             word_mid = (word['start'] + word['end']) / 2
-            speaker = find_speaker_at_timestamp(word_mid, margin=1)
+            speaker = find_speaker_at_timestamp(word_mid, margin=0.3)
 
             # Debug logging for first segment only
             if segment == transcription_segments[0] and len(word_speaker_counts) < 3:

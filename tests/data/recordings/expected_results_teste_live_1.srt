@@ -1,0 +1,26 @@
+﻿1
+00:00:00,000 --> 00:00:04,519
+[SPEAKER_01] Então, ele já está gravando o
+que eu estou falando, talvez se você falar
+
+2
+00:00:04,519 --> 00:00:07,799
+[SPEAKER_02] Ele não vai reconhecer a
+minha voz e vai dar alguma coisa
+
+3
+00:00:08,019 --> 00:00:09,000
+[SPEAKER_01] Eu acho que não.
+
+4
+00:00:09,380 --> 00:00:15,140
+[SPEAKER_01] O certo seria ele dividir as
+duas vozes em Speaker 1, que sou eu, e Speaker 2, que é você.
+
+5
+00:00:15,259 --> 00:00:16,239
+[SPEAKER_01] Vamos testar aqui agora.
+
+6
+00:00:15,977 --> 00:00:16,477
+[SPEAKER_03] [inaudível]

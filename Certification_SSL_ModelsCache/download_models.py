@@ -30,8 +30,10 @@ MODELS_TO_DOWNLOAD = [
     "Systran/faster-whisper-medium",
     "pyannote/speaker-diarization-3.1",
     "pyannote/segmentation-3.0",
+    "pyannote/segmentation",
     "pyannote/wespeaker-voxceleb-resnet34-LM",
 ]
+
 
 def convert_symlinks_to_files(cache_dir: Path):
     """

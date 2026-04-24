@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-04-22T22:07:25.708408",
+  "git": {
+    "commit": "9678d123256e284c4117654727cdac3a6a21e0dd",
+    "branch": "diarizacao-2",
+    "uncommitted_changes": true
+  },
+  "diarization_params": {},
+  "audio_file": "teste_live_1.wav",
+  "audio_duration_sec": 16.56,
+  "processing_time_sec": 26.27,
+  "speed_ratio": 1.59,
+  "transcription": {
+    "wer_traditional": 0.0741,
+    "wer_normalized": 0.0741,
+    "accuracy_normalized_percent": 92.6
+  },
+  "diarization": {
+    "speakers_expected": 3,
+    "speakers_detected": 3,
+    "speaker_accuracy_percent": 66.7,
+    "correct_segments": 4,
+    "total_segments": 6,
+    "best_label_mapping": {
+      "SPEAKER_01": "SPEAKER_01",
+      "SPEAKER_02": "SPEAKER_02",
+      "SPEAKER_03": "SPEAKER_03"
+    },
+    "ref_speakers": [
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03"
+    ],
+    "hyp_speakers": [
+      "SPEAKER_01",
+      "SPEAKER_02",
+      "SPEAKER_03"
+    ]
+  },
+  "hypothesis_segments": [
+    {
+      "start": 0.0,
+      "end": 4.52,
+      "speaker": "SPEAKER_01",
+      "text": " Então, ele já está gravando o que eu estou falando, talvez se você falar alguma coisa..."
+    },
+    {
+      "start": 4.52,
+      "end": 7.82,
+      "speaker": "SPEAKER_01",
+      "text": " Ele não vai reconhecer a minha voz e vai dar alguma coisa diferente, talvez?"
+    },
+    {
+      "start": 8.04,
+      "end": 9.0,
+      "speaker": "SPEAKER_01",
+      "text": " Eu acho que não."
+    },
+    {
+      "start": 9.38,
+      "end": 15.14,
+      "speaker": "SPEAKER_01",
+      "text": " O certo seria ele dividir as duas vozes em Speaker 1, que sou eu, e Speaker 2, que é você."
+    },
+    {
+      "start": 15.24,
+      "end": 16.26,
+      "speaker": "SPEAKER_02",
+      "text": " Vamos testar aqui agora."
+    },
+    {
+      "start": 15.977843750000002,
+      "end": 16.28159375,
+      "speaker": "SPEAKER_03",
+      "text": "[inaudível]"
+    }
+  ]
+}
