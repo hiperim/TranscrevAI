@@ -139,12 +139,7 @@ class SRTGenerator:
         if current_line:
             lines.append(current_line)
         
-        # Limit to maximum lines per subtitle
-        if len(lines) > self.max_lines_per_subtitle:
-            # Try to combine lines intelligently
-            lines = self._optimize_line_breaks(lines)
-        
-        return lines[:self.max_lines_per_subtitle]
+        return lines
 
     def _optimize_line_breaks(self, lines: List[str]) -> List[str]:
         """Optimize line breaks for better readability in PT-BR"""

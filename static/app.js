@@ -635,8 +635,11 @@ function showResults(data, sessionId) {
     const visibleSegments = (data.segments || []).filter(s => s.text && s.text !== '[inaudível]');
     const hasSegments = visibleSegments.length > 0;
 
+    const MAX_VISIBLE_SEGMENTS = 30;
+
     if (hasSegments) {
-        visibleSegments.forEach(function(segment) {
+        const segmentsToShow = visibleSegments.slice(0, MAX_VISIBLE_SEGMENTS);
+        segmentsToShow.forEach(function(segment) {
             const segmentDiv = document.createElement('div');
             segmentDiv.className = 'segment';
             segmentDiv.innerHTML = `
@@ -646,6 +649,15 @@ function showResults(data, sessionId) {
             `;
             transcriptionResults.appendChild(segmentDiv);
         });
+
+        if (visibleSegments.length > MAX_VISIBLE_SEGMENTS) {
+            const partialNotice = document.createElement('p');
+            partialNotice.className = 'timer-max';
+            partialNotice.style.textAlign = 'left';
+            partialNotice.style.marginTop = '12px';
+            partialNotice.textContent = `*Resultado parcial (${MAX_VISIBLE_SEGMENTS} de ${visibleSegments.length} segmentos). Resultado completo disponível no arquivo de legendas (.srt).`;
+            transcriptionResults.appendChild(partialNotice);
+        }
 
         // Aviso discreto se houver falantes detectados sem fala transcrita
         const speakersInSegments = new Set(visibleSegments.map(s => s.speaker).filter(Boolean)).size;
