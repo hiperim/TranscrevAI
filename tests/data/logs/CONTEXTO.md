@@ -9,7 +9,7 @@ Melhorar diarização do app. Problema raiz: pyannote 3.1 não detecta speakers 
 - Pré-processamento de áudio — sem ganho
 - margin=1.0s — melhor resultado até agora, mantido
 
-## Plano atual (branch diarizacao-2)
+## Planos ja testados (branch diarizacao-2)
 Testar em sequência, benchmarkando antes e depois de cada mudança:
 
 1. `min_cluster_size` 12 → 6 — permite clusters pequenos (speakers que falam pouco)

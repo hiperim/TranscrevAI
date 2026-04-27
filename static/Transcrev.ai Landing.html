@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Transcrev.ai — Menos audição. Mais ação.</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          ink: '#000000',
+          paper: '#FFFFFF',
+          mist: '#F5F5F7',
+          fog:  '#86868B',
+          link: '#0066CC',
+        },
+        letterSpacing: {
+          tightest: '-0.055em',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  html, body { background:#FFFFFF; color:#000; -webkit-font-smoothing:antialiased; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+
+  /* Apple-ish display tracking */
+  .display {
+    font-weight: 800;
+    letter-spacing: -0.055em;
+    line-height: 0.95;
+  }
+  .display-sm {
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  /* Subtle frosted nav */
+  .nav-blur {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* Logo wave */
+  .logo-wave path { stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; fill: none; }
+
+  /* Hide scrollbars on mobile horizontal scrollers */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Caret blink for transcript */
+  @keyframes blink { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
+  .caret { display:inline-block; width:2px; height:1em; background:#000; vertical-align:-0.15em; margin-left:2px; animation: blink 1.05s steps(1) infinite; }
+
+  /* Selection */
+  ::selection { background:#000; color:#fff; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useRef, useMemo } = React;
+const { motion, AnimatePresence, useMotionValue, useTransform, useSpring, useInView } = window.FramerMotion || window.Motion || window["framer-motion"] || {};
+
+/* ---------- Logo ---------- */
+function Logo({ className = "" }) {
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <svg viewBox="0 0 28 22" className="logo-wave w-7 h-[22px] text-black" aria-hidden="true">
+        <path d="M1 11 H4" />
+        <path d="M6 7 V15" />
+        <path d="M9 3 V19" />
+        <path d="M12 6 V16" />
+        <path d="M15 1 V21" />
+        <path d="M18 5 V17" />
+        <path d="M21 8 V14" />
+        <path d="M24 4 V18" />
+        <path d="M27 11 H27" />
+      </svg>
+      <span className="text-[19px] font-bold tracking-[-0.02em] text-black leading-none">
+        Transcrev<span className="text-fog font-medium">.ai</span>
+      </span>
+    </div>
+  );
+}
+
+/* ---------- Nav ---------- */
+function Nav() {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-0 inset-x-0 z-50 nav-blur"
+    >
+      <div className="max-w-[1200px] mx-auto px-6 h-12 flex items-center justify-between">
+        <Logo />
+        <nav className="hidden md:flex items-center gap-9 text-[13px] text-black/80">
+          <a href="#produto" className="hover:text-black transition-colors">Produto</a>
+          <a href="#seguranca" className="hover:text-black transition-colors">Segurança</a>
+          <a href="#precos" className="hover:text-black transition-colors">Preços</a>
+        </nav>
+        <div className="flex items-center gap-3">
+          <a
+            href="#cta"
+            className="hidden sm:inline-flex items-center justify-center bg-black text-white text-[13px] font-medium px-4 h-8 rounded-full hover:bg-black/85 transition-colors"
+          >
+            Começar
+          </a>
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/5"
+            aria-label="Menu"
+          >
+            <svg viewBox="0 0 20 20" className="w-5 h-5"><path d="M3 6h14M3 14h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden overflow-hidden border-t border-black/5"
+          >
+            <div className="px-6 py-4 flex flex-col gap-3 text-[15px]">
+              <a href="#produto" onClick={()=>setOpen(false)}>Produto</a>
+              <a href="#seguranca" onClick={()=>setOpen(false)}>Segurança</a>
+              <a href="#precos" onClick={()=>setOpen(false)}>Preços</a>
+              <a href="#cta" className="mt-2 inline-flex items-center justify-center bg-black text-white px-4 h-9 rounded-full text-[13px]">Começar</a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
+  );
+}
+
+/* ---------- Interactive Sound Wave -> Text ---------- */
+/* The visual: a row of bars that breathe like a waveform; as the user
+   slides/hovers, the bars settle into clean baselines and lines of
+   transcribed text fade up underneath. */
+
+const TRANSCRIPT_LINES = [
+  { speaker: "Ana",  text: "Então, sobre o lançamento — quero focar na clareza acima de tudo." },
+  { speaker: "Léo",  text: "Concordo. A demo precisa ser legível em três segundos." },
+  { speaker: "Ana",  text: "Manda o resumo executivo até sexta, com os marcos do Q3." },
+  { speaker: "Léo",  text: "Feito. Já marquei a revisão com o jurídico e o time de produto." },
+];
+
+function useTicker(active, speed = 0.06) {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let raf, last = performance.now();
+    const loop = (now) => {
+      const dt = (now - last) / 1000; last = now;
+      setT(prev => prev + dt * speed * 60);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [active, speed]);
+  return t;
+}
+
+function WaveToText() {
+  // progress: 0 = pure waveform, 1 = pure transcript
+  const [progress, setProgress] = useState(0.0);
+  const [dragging, setDragging] = useState(false);
+  const ticker = useTicker(progress < 0.98);
+
+  const BAR_COUNT = 56;
+  const bars = useMemo(() => {
+    return Array.from({ length: BAR_COUNT }).map((_, i) => {
+      // Pseudo-random but stable amplitude profile (envelope)
+      const env = Math.sin((i / BAR_COUNT) * Math.PI) * 0.85 + 0.15;
+      const seed = Math.sin(i * 12.9898) * 43758.5453;
+      const rand = seed - Math.floor(seed);
+      return { env, rand };
+    });
+  }, []);
+
+  // Animate progress on first view
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const el = containerRef.current; if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          // gentle initial reveal: wave -> text
+          let start = performance.now();
+          const dur = 2400;
+          const tick = (now) => {
+            const k = Math.min(1, (now - start) / dur);
+            // ease out cubic
+            const eased = 1 - Math.pow(1 - k, 3);
+            setProgress(eased);
+            if (k < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          io.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="w-full">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative mx-auto w-full max-w-[1040px] rounded-[28px] bg-mist overflow-hidden"
+        style={{ boxShadow: "0 1px 0 rgba(0,0,0,0.04), 0 30px 60px -30px rgba(0,0,0,0.18)" }}
+      >
+        {/* faux app chrome */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-black/10" />
+            <span className="w-2.5 h-2.5 rounded-full bg-black/10" />
+            <span className="w-2.5 h-2.5 rounded-full bg-black/10" />
+          </div>
+          <div className="text-[11px] tracking-wide text-fog font-medium uppercase">Reunião · 02:14</div>
+          <div className="text-[11px] text-fog font-medium">PT-BR</div>
+        </div>
+
+        {/* Stage */}
+        <div className="relative h-[300px] sm:h-[360px] px-6 sm:px-10">
+          {/* WAVEFORM */}
+          <div
+            className="absolute inset-x-6 sm:inset-x-10 top-1/2 -translate-y-1/2 flex items-center justify-between gap-[2px] sm:gap-1"
+            aria-hidden="true"
+          >
+            {bars.map((b, i) => {
+              const barKey = `bar-${i}`;
+              // breathing waveform amplitude when progress < 1
+              const breathe = Math.sin(ticker * 2 + i * 0.35) * 0.5 + 0.5;
+              const waveH = (b.env * (0.5 + breathe * 0.6)) * 120; // px
+              // collapse toward a flat thin line as progress -> 1
+              const settled = 4;
+              const h = waveH * (1 - progress) + settled * progress;
+              // bars also collapse opacity slightly so text reads
+              const op = 1 - progress * 0.6;
+              return (
+                <span
+                  key={barKey}
+                  className="block bg-black rounded-full"
+                  style={{
+                    width: "3px",
+                    height: `${h}px`,
+                    opacity: op,
+                    transition: dragging ? "none" : "height 80ms linear",
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* TRANSCRIPT */}
+          <div className="absolute inset-x-6 sm:inset-x-10 inset-y-0 flex flex-col justify-center pointer-events-none">
+            <div className="space-y-3 sm:space-y-4">
+              {TRANSCRIPT_LINES.map((line, i) => {
+                // each line appears in a staggered window of progress
+                const start = 0.25 + i * 0.16;
+                const end = start + 0.18;
+                const local = Math.max(0, Math.min(1, (progress - start) / (end - start)));
+                return (
+                  <div
+                    key={`line-${i}`}
+                    className="flex items-baseline gap-3 sm:gap-4"
+                    style={{
+                      opacity: local,
+                      transform: `translateY(${(1 - local) * 8}px)`,
+                      transition: "opacity 200ms ease, transform 200ms ease",
+                    }}
+                  >
+                    <span className="shrink-0 text-[11px] sm:text-[12px] font-semibold uppercase tracking-wider text-fog w-10">
+                      {line.speaker}
+                    </span>
+                    <span className="text-[15px] sm:text-[17px] leading-snug text-black">
+                      {line.text}
+                      {i === TRANSCRIPT_LINES.length - 1 && local > 0.9 && <span className="caret" />}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Scrubber */}
+        <div className="px-5 sm:px-8 pb-5 pt-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setProgress(p => p > 0.5 ? 0 : 1)}
+              className="shrink-0 w-9 h-9 rounded-full bg-black text-white grid place-items-center hover:bg-black/85 transition-colors"
+              aria-label="Alternar"
+            >
+              {progress > 0.5 ? (
+                <svg viewBox="0 0 14 14" className="w-3 h-3 fill-white"><rect x="3" y="2" width="2.5" height="10"/><rect x="8.5" y="2" width="2.5" height="10"/></svg>
+              ) : (
+                <svg viewBox="0 0 14 14" className="w-3 h-3 fill-white"><path d="M3 2 L12 7 L3 12 Z"/></svg>
+              )}
+            </button>
+            <div className="flex-1">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-fog font-medium mb-1.5">
+                <span>Áudio</span>
+                <span>Texto</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.001"
+                value={progress}
+                onChange={(e) => setProgress(parseFloat(e.target.value))}
+                onPointerDown={() => setDragging(true)}
+                onPointerUp={() => setDragging(false)}
+                className="w-full appearance-none h-1 bg-black/10 rounded-full outline-none accent-black"
+                style={{
+                  background: `linear-gradient(to right, #000 ${progress*100}%, rgba(0,0,0,0.1) ${progress*100}%)`
+                }}
+              />
+            </div>
+            <div className="hidden sm:block text-[11px] text-fog font-medium tabular-nums w-10 text-right">
+              {Math.round(progress * 100)}%
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      <p className="text-center text-[12px] text-fog mt-4">
+        Arraste para ver áudio virar texto. Ao vivo. Em qualquer idioma.
+      </p>
+    </div>
+  );
+}
+
+/* ---------- Hero ---------- */
+function Hero() {
+  return (
+    <section className="pt-28 sm:pt-32 pb-20 sm:pb-28 px-6">
+      <div className="max-w-[1100px] mx-auto text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16,1,0.3,1] }}
+          className="text-[13px] font-medium text-fog tracking-wide mb-5 uppercase"
+        >
+          Transcrev.ai · Novo
+        </motion.p>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.05, ease: [0.16,1,0.3,1] }}
+          className="display text-[56px] sm:text-[88px] md:text-[112px] text-black"
+        >
+          Menos audição.
+          <br />
+          <span className="text-fog">Mais ação.</span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.18, ease: [0.16,1,0.3,1] }}
+          className="mt-7 sm:mt-9 max-w-[640px] mx-auto text-[19px] sm:text-[22px] leading-snug text-black/80 font-medium tracking-[-0.01em]"
+        >
+          O Transcrev.ai transforma horas de fala em texto impecável.
+          Instantâneo. Simples. Inteligente.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.32, ease: [0.16,1,0.3,1] }}
+          className="mt-9 flex items-center justify-center gap-7 flex-wrap"
+        >
+          <a
+            id="cta"
+            href="#"
+            className="inline-flex items-center justify-center bg-black text-white text-[15px] font-medium px-6 h-11 rounded-full hover:bg-black/85 transition-colors"
+          >
+            Teste grátis
+          </a>
+          <a
+            href="#video"
+            className="inline-flex items-center gap-1.5 text-link text-[15px] font-medium hover:underline"
+          >
+            Ver vídeo
+            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5"><path d="M5 3l6 5-6 5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+        </motion.div>
+
+        <div className="mt-16 sm:mt-20">
+          <WaveToText />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Bento Card ---------- */
+function BentoCard({ children, className = "", delay = 0 }) {
+  const ref = useRef(null);
+  const inView = useInView ? useInView(ref, { once: true, amount: 0.3 }) : true;
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 28 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay, ease: [0.16,1,0.3,1] }}
+      whileHover={{ y: -4 }}
+      className={`group relative bg-mist rounded-[28px] overflow-hidden ${className}`}
+      style={{ transition: "box-shadow 400ms ease" }}
+    >
+      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+           style={{ boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.04), 0 30px 60px -30px rgba(0,0,0,0.18)" }} />
+      {children}
+    </motion.div>
+  );
+}
+
+/* ---------- Card visuals ---------- */
+function PrecisionVisual() {
+  return (
+    <div className="relative h-[220px] flex items-end justify-center px-6">
+      {/* Concentric reticle */}
+      <div className="absolute inset-0 grid place-items-center">
+        <div className="relative w-[260px] h-[180px]">
+          {[1,2,3,4].map((r,i)=>(
+            <motion.div
+              key={`ring-${i}`}
+              initial={{ scale: 0.6, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.0, delay: i*0.08, ease: [0.16,1,0.3,1] }}
+              className="absolute inset-0 m-auto rounded-full border border-black/10"
+              style={{ width: 60+i*40, height: 60+i*40 }}
+            />
+          ))}
+          <div className="absolute inset-0 m-auto w-3 h-3 rounded-full bg-black" />
+          <motion.div
+            initial={{ pathLength: 0 }}
+            whileInView={{ pathLength: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            className="absolute inset-0"
+          >
+            <svg viewBox="0 0 260 180" className="w-full h-full">
+              <motion.path
+                d="M10 90 Q 70 30, 130 90 T 250 90"
+                stroke="#000" strokeWidth="1.4" fill="none"
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.6, ease: "easeOut" }}
+              />
+            </svg>
+          </motion.div>
+        </div>
+      </div>
+      {/* Sample chips */}
+      <div className="relative z-10 flex flex-wrap gap-1.5 justify-center pb-2">
+        {["sotaque","gíria","jargão","nuance"].map((t,i)=>(
+          <span key={t} className="text-[11px] font-medium text-black/70 bg-white border border-black/5 rounded-full px-2.5 py-1">{t}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SpeedVisual() {
+  return (
+    <div className="relative h-[220px] flex items-center justify-center px-6">
+      <div className="relative w-full max-w-[300px]">
+        {/* Before / After bars */}
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-fog font-semibold">Antes</span>
+              <span className="text-[11px] text-fog tabular-nums">3h 12min</span>
+            </div>
+            <div className="h-2 bg-black/8 rounded-full overflow-hidden" style={{background:"rgba(0,0,0,0.08)"}}>
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: "100%" }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.4, ease: "easeOut" }}
+                className="h-full bg-black/30"
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-black font-semibold">Agora</span>
+              <span className="text-[11px] text-black font-medium tabular-nums">12s</span>
+            </div>
+            <div className="h-2 bg-black/8 rounded-full overflow-hidden" style={{background:"rgba(0,0,0,0.08)"}}>
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: "4%" }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2, ease: [0.16,1,0.3,1] }}
+                className="h-full bg-black"
+              />
+            </div>
+          </div>
+        </div>
+        {/* Big number */}
+        <div className="mt-7 flex items-baseline gap-2">
+          <span className="display text-[64px] leading-none">900<span className="text-fog">×</span></span>
+          <span className="text-[12px] text-fog leading-tight max-w-[120px]">mais rápido que transcrição manual</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyVisual() {
+  return (
+    <div className="relative h-[220px] flex items-center justify-center">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.9, ease: [0.16,1,0.3,1] }}
+        className="relative"
+      >
+        <svg viewBox="0 0 120 140" className="w-[120px] h-[140px]">
+          <defs>
+            <linearGradient id="lockShine" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#000" stopOpacity="1"/>
+              <stop offset="100%" stopColor="#000" stopOpacity="0.85"/>
+            </linearGradient>
+          </defs>
+          {/* Shackle */}
+          <motion.path
+            d="M30 60 V40 a30 30 0 0 1 60 0 V60"
+            stroke="#000" strokeWidth="6" fill="none" strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            whileInView={{ pathLength: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.0, ease: "easeOut" }}
+          />
+          {/* Body */}
+          <rect x="20" y="60" width="80" height="65" rx="14" fill="url(#lockShine)" />
+          <circle cx="60" cy="90" r="5" fill="#fff" />
+          <rect x="58" y="92" width="4" height="14" rx="2" fill="#fff" />
+        </svg>
+      </motion.div>
+      {/* Floating chips */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[
+          { t: "AES-256", x: "10%", y: "18%" },
+          { t: "LGPD", x: "78%", y: "22%" },
+          { t: "Zero retenção", x: "8%", y: "70%" },
+          { t: "On-device", x: "74%", y: "72%" },
+        ].map((c,i)=>(
+          <motion.span
+            key={c.t}
+            initial={{ opacity: 0, y: 6 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 + i*0.1, duration: 0.6 }}
+            className="absolute text-[11px] font-medium text-black bg-white border border-black/5 rounded-full px-2.5 py-1 shadow-[0_2px_10px_rgba(0,0,0,0.04)]"
+            style={{ left: c.x, top: c.y }}
+          >{c.t}</motion.span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Bento Grid ---------- */
+function Bento() {
+  return (
+    <section id="produto" className="px-6 pb-24 sm:pb-32">
+      <div className="max-w-[1200px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.8, ease: [0.16,1,0.3,1] }}
+          className="text-center mb-12 sm:mb-16"
+        >
+          <h2 className="display text-[40px] sm:text-[64px] md:text-[80px] text-black">
+            Construído para <span className="text-fog">pensar</span>.
+          </h2>
+          <p className="mt-5 text-[17px] sm:text-[20px] text-black/70 max-w-[560px] mx-auto tracking-[-0.01em]">
+            Três princípios. Uma transcrição. Tudo o que você precisa para transformar fala em decisão.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-4">
+          {/* Precisão — large */}
+          <BentoCard className="md:col-span-3 md:row-span-2 p-7 sm:p-9 flex flex-col" delay={0}>
+            <div className="flex-1">
+              <PrecisionVisual />
+            </div>
+            <div className="mt-6">
+              <p className="text-[12px] uppercase tracking-wider font-semibold text-fog mb-2">01 · Precisão Cirúrgica</p>
+              <h3 className="display-sm text-[28px] sm:text-[34px] text-black">A IA que entende nuances, sotaques e jargões.</h3>
+              <p className="mt-3 text-[15px] text-black/70 leading-relaxed max-w-[420px]">
+                Treinada em milhões de horas de áudio em português, ela ouve como um humano — e transcreve como um editor.
+              </p>
+            </div>
+          </BentoCard>
+
+          {/* Velocidade */}
+          <BentoCard className="md:col-span-3 p-7 sm:p-9 flex flex-col" delay={0.08}>
+            <div className="flex-1">
+              <SpeedVisual />
+            </div>
+            <div className="mt-6">
+              <p className="text-[12px] uppercase tracking-wider font-semibold text-fog mb-2">02 · Velocidade Nativa</p>
+              <h3 className="display-sm text-[24px] sm:text-[28px] text-black">Converta em segundos o que levava horas.</h3>
+            </div>
+          </BentoCard>
+
+          {/* Privacidade */}
+          <BentoCard id="seguranca" className="md:col-span-3 p-7 sm:p-9 flex flex-col" delay={0.16}>
+            <div className="flex-1">
+              <PrivacyVisual />
+            </div>
+            <div className="mt-6">
+              <p className="text-[12px] uppercase tracking-wider font-semibold text-fog mb-2">03 · Privacidade Total</p>
+              <h3 className="display-sm text-[24px] sm:text-[28px] text-black">Processamento seguro. Seus dados são apenas seus.</h3>
+            </div>
+          </BentoCard>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Closing CTA ---------- */
+function ClosingCTA() {
+  return (
+    <section id="precos" className="px-6 pb-28 sm:pb-40">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.9, ease: [0.16,1,0.3,1] }}
+        className="max-w-[900px] mx-auto text-center"
+      >
+        <h2 className="display text-[44px] sm:text-[72px] md:text-[88px] text-black">
+          Comece a ouvir<br/><span className="text-fog">menos.</span>
+        </h2>
+        <p className="mt-6 text-[18px] sm:text-[20px] text-black/70 max-w-[520px] mx-auto">
+          Grátis para começar. Sem cartão. Sem instalação.
+        </p>
+        <div className="mt-9 flex items-center justify-center gap-7 flex-wrap">
+          <a href="#" className="inline-flex items-center justify-center bg-black text-white text-[15px] font-medium px-6 h-11 rounded-full hover:bg-black/85 transition-colors">
+            Teste grátis
+          </a>
+          <a href="#" className="inline-flex items-center gap-1.5 text-link text-[15px] font-medium hover:underline">
+            Ver planos
+            <svg viewBox="0 0 16 16" className="w-3.5 h-3.5"><path d="M5 3l6 5-6 5" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+/* ---------- Footer ---------- */
+function Footer() {
+  const cols = [
+    {
+      title: "Produto",
+      links: ["Visão geral", "Recursos", "Integrações", "Mudanças", "Roadmap"],
+    },
+    {
+      title: "Soluções",
+      links: ["Reuniões", "Pesquisa", "Mídia", "Educação", "Saúde"],
+    },
+    {
+      title: "Empresa",
+      links: ["Sobre", "Carreira", "Imprensa", "Contato"],
+    },
+    {
+      title: "Recursos",
+      links: ["Suporte", "Status", "Documentação", "Comunidade"],
+    },
+  ];
+  return (
+    <footer className="bg-mist border-t border-black/5">
+      <div className="max-w-[1200px] mx-auto px-6 py-14">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
+          <div className="col-span-2">
+            <Logo />
+            <p className="mt-4 text-[13px] text-fog max-w-[280px] leading-relaxed">
+              Transcrição inteligente para times que decidem rápido.
+            </p>
+          </div>
+          {cols.map((c) => (
+            <div key={c.title}>
+              <p className="text-[12px] font-semibold text-black mb-3">{c.title}</p>
+              <ul className="space-y-2.5">
+                {c.links.map(l => (
+                  <li key={l}>
+                    <a href="#" className="text-[13px] text-fog hover:text-black transition-colors">{l}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 pt-6 border-t border-black/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p className="text-[12px] text-fog">
+            Copyright © 2025 Transcrev.ai. Todos os direitos reservados.
+          </p>
+          <div className="flex items-center gap-5 text-[12px] text-fog">
+            <a href="#" className="hover:text-black">Privacidade</a>
+            <a href="#" className="hover:text-black">Termos</a>
+            <a href="#" className="hover:text-black">Cookies</a>
+            <a href="#" className="hover:text-black">PT-BR</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ---------- App ---------- */
+function App() {
+  // Page-level fade-in
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="min-h-screen bg-paper"
+    >
+      <Nav />
+      <main>
+        <Hero />
+        <Bento />
+        <ClosingCTA />
+      </main>
+      <Footer />
+    </motion.div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

@@ -203,14 +203,8 @@ class LiveRecorder {
             console.log('[DEBUG] Requesting microphone access...');
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             console.log('[DEBUG] Microphone access granted');
-            const supportedMimeTypes = [
-                'audio/webm;codecs=opus',
-                'audio/webm',
-                'audio/mp4',
-                'audio/ogg;codecs=opus',
-                ''
-            ];
-            const mimeType = supportedMimeTypes.find(type => type === '' || MediaRecorder.isTypeSupported(type)) || '';
+            const preferredMimeType = 'audio/webm;codecs=opus';
+            const mimeType = MediaRecorder.isTypeSupported(preferredMimeType) ? preferredMimeType : '';
             this.detectedMimeType = mimeType;
             this.mediaRecorder = mimeType
                 ? new MediaRecorder(stream, { mimeType })
@@ -624,16 +618,17 @@ function showResults(data, sessionId) {
     const transcriptionResults = document.getElementById('transcription-results');
     const downloadBtn = document.getElementById('download-btn');
 
+    transcriptionResults.innerHTML = '';
+    const visibleSegments = (data.segments || []).filter(s => s.text && s.text !== '[inaudível]');
+    const hasSegments = visibleSegments.length > 0;
+    const speakersWithText = new Set(visibleSegments.map(s => s.speaker).filter(Boolean)).size;
+
     stats.innerHTML = `
-        <div class="stat-card"><div class="stat-value">${data.num_speakers || 0}</div><div class="stat-label">Falantes</div></div>
+        <div class="stat-card"><div class="stat-value">${speakersWithText}</div><div class="stat-label">Falantes</div></div>
         <div class="stat-card"><div class="stat-value">${data.segments ? data.segments.length : 0}</div><div class="stat-label">Segmentos</div></div>
         <div class="stat-card"><div class="stat-value">${data.audio_duration || 'N/A'}s</div><div class="stat-label">Duração do áudio</div></div>
         <div class="stat-card"><div class="stat-value">${data.processing_ratio ? data.processing_ratio + 'x' : 'N/A'}</div><div class="stat-label">Ratio</div></div>
     `;
-
-    transcriptionResults.innerHTML = '';
-    const visibleSegments = (data.segments || []).filter(s => s.text && s.text !== '[inaudível]');
-    const hasSegments = visibleSegments.length > 0;
 
     const MAX_VISIBLE_SEGMENTS = 30;
 
@@ -660,8 +655,7 @@ function showResults(data, sessionId) {
         }
 
         // Aviso discreto se houver falantes detectados sem fala transcrita
-        const speakersInSegments = new Set(visibleSegments.map(s => s.speaker).filter(Boolean)).size;
-        const silentSpeakers = (data.num_speakers || 0) - speakersInSegments;
+        const silentSpeakers = (data.num_speakers || 0) - speakersWithText;
         if (silentSpeakers > 0) {
             const notice = document.createElement('p');
             notice.className = 'timer-max';
