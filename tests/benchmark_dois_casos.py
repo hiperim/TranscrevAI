@@ -1,8 +1,13 @@
 """
-Benchmark de diarização para três casos:
-  1. audio_teste_2.wav — falante único, ambiente controlado (esperado: 1 speaker)
-  2. audio_teste_3.wav — falante único com artefato de overlap (esperado: 1 speaker)
-  3. two.speakers.wav  — dois falantes reais (esperado: 2 speakers)
+Benchmark de diarização — suite completa:
+  1. audio_teste_2.wav     — 1 speaker, ambiente controlado
+  2. audio_teste_3.wav     — 1 speaker, artefato de overlap
+  3. audio_teste_4.wav     — 1 speaker, mesmo ambiente
+  4. teste_live_1.wav      — 2 speakers, gravação ao vivo
+  5. two.speakers.wav      — 2 speakers reais
+  6. three.speakers.wav    — 3 speakers reais
+  7. three.speakers_2.wav  — 3 speakers reais (variação)
+  8. four.speakers.wav     — 4 speakers reais
 
 Mede WER e acurácia de diarização. Salva log em tests/logs/.
 """
@@ -37,21 +42,56 @@ CASES = [
         "audio": RECORDINGS / "audio_teste_2.wav",
         "expected_srt": RECORDINGS / "trans_teste_2.srt",
         "expected_speakers": 1,
-        "description": "Falante único, ambiente controlado, PT-BR, fala contínua",
+        "description": "1 speaker, ambiente controlado, fala contínua",
     },
     {
         "name": "single_speaker_teste3",
         "audio": RECORDINGS / "audio_teste_3.wav",
         "expected_srt": RECORDINGS / "trans_teste_3.srt",
         "expected_speakers": 1,
-        "description": "Falante único com artefato de overlap, PT-BR",
+        "description": "1 speaker, artefato de overlap",
+    },
+    {
+        "name": "single_speaker_teste4",
+        "audio": RECORDINGS / "audio_teste_4.wav",
+        "expected_srt": RECORDINGS / "trans_teste_4.srt",
+        "expected_speakers": 1,
+        "description": "1 speaker, mesmo ambiente, mesmo texto",
+    },
+    {
+        "name": "live_two_speakers",
+        "audio": RECORDINGS / "teste_live_1.wav",
+        "expected_srt": RECORDINGS / "expected_results_teste_live_1.srt",
+        "expected_speakers": 2,
+        "description": "2 speakers, gravação ao vivo",
     },
     {
         "name": "two_speakers",
         "audio": RECORDINGS / "two.speakers.wav",
         "expected_txt": RECORDINGS / "expected_results_two.speakers.txt",
         "expected_speakers": 2,
-        "description": "Dois falantes reais, diálogo curto, PT-BR",
+        "description": "2 speakers reais, diálogo curto",
+    },
+    {
+        "name": "three_speakers",
+        "audio": RECORDINGS / "three.speakers.wav",
+        "expected_txt": RECORDINGS / "expected_results_three.speakers.txt",
+        "expected_speakers": 3,
+        "description": "3 speakers reais, diálogo curto",
+    },
+    {
+        "name": "three_speakers_2",
+        "audio": RECORDINGS / "three.speakers_2.wav",
+        "expected_txt": RECORDINGS / "expected_results_three.speakers_2.txt",
+        "expected_speakers": 3,
+        "description": "3 speakers reais, variação",
+    },
+    {
+        "name": "four_speakers",
+        "audio": RECORDINGS / "four.speakers.wav",
+        "expected_txt": RECORDINGS / "expected_results_four.speakers.txt",
+        "expected_speakers": 4,
+        "description": "4 speakers reais",
     },
 ]
 
@@ -292,7 +332,7 @@ async def run_case(case: dict, svc: TranscriptionService, diarizer: PyannoteDiar
 
 async def run_benchmark():
     print(f"\n{'='*60}")
-    print("BENCHMARK — Diarização: falante único (x2) vs. dois falantes")
+    print("BENCHMARK — Suite completa de diarização (8 casos)")
     print(f"{'='*60}")
 
     print("\nInicializando modelos (reutilizados para todos os casos)...")

@@ -6,12 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TranscrevAI - Transcrição e Diarização Inteligentes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css?v={{ static_hashes['styles.css'] }}">
 </head>
 <body>
     <div class="container">
-        <h1>TranscrevAI</h1>
-        <p class="subtitle">Transcrição e Diarização Inteligentes</p>
+        <div class="logo-wrapper">
+            <div class="logo-header">
+                <div class="soundwave" id="soundwave"></div>
+                <span class="logo-text">TranscrevAI</span>
+            </div>
+            <p class="subtitle">Transcrição e Diarização Inteligentes</p>
+        </div>
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('recording')">
@@ -43,13 +51,13 @@
                     <button class="button button-primary" id="start-live-btn">
                         Iniciar Gravação
                     </button>
-                    <button class="button button-warning" id="pause-live-btn" disabled>
+                    <button class="button button-warning" id="pause-live-btn" style="display:none">
                         Pausar
                     </button>
-                    <button class="button button-primary" id="resume-live-btn" disabled>
+                    <button class="button button-primary" id="resume-live-btn" style="display:none">
                         Resumir
                     </button>
-                    <button class="button button-danger" id="stop-live-btn" disabled>
+                    <button class="button button-danger" id="stop-live-btn" style="display:none">
                         Parar Gravação
                     </button>
                 </div>
@@ -111,6 +119,32 @@
         </div>
     </div>
 
+    <script>
+        const generateMultiPeakWave = (count = 50) => {
+            const peakCenters = [0.2, 0.45, 0.75];
+            const peakWidths  = [0.15, 0.2, 0.18];
+            return Array.from({ length: count }, (_, i) => {
+                const x = i / (count - 1);
+                let envelope = 0;
+                peakCenters.forEach((center, idx) => {
+                    const dist      = Math.abs(x - center);
+                    const influence = Math.exp(-Math.pow(dist / peakWidths[idx], 2));
+                    envelope = Math.max(envelope, influence);
+                });
+                const sawtooth = (i % 3 === 0) ? 1.0 : (i % 3 === 1 ? 0.4 : 0.7);
+                const noise    = 0.8 + Math.random() * 0.4;
+                return Math.max(8, Math.min(100, Math.round(envelope * sawtooth * noise * 100)));
+            });
+        };
+
+        const wave = document.getElementById('soundwave');
+        generateMultiPeakWave().forEach(h => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = h + '%';
+            wave.appendChild(bar);
+        });
+    </script>
     <script src="/static/app.js?v={{ static_hashes['app.js'] }}"></script>
 </body>
 </html>

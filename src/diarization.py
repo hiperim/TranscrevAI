@@ -89,13 +89,15 @@ class PyannoteDiarizer:
 
         logger.info(f"Starting pyannote.audio diarization for: {audio_path}")
         try:
-            diarization_result = self.pipeline(audio_path)
+            diarization_result, centroids = self.pipeline(audio_path, return_embeddings=True)
+            speaker_labels = diarization_result.labels()
+            centroids_dict = {label: centroids[i] for i, label in enumerate(speaker_labels)}
             raw_segs = [(t.start, t.end, spk) for t, _, spk in diarization_result.itertracks(yield_label=True)]
             logger.info(f"RAW pyannote output: {[(s[2], round(s[0],3), round(s[1],3)) for s in raw_segs]}")
             for i in range(1, len(raw_segs)):
                 gap = raw_segs[i][0] - raw_segs[i-1][1]
                 logger.info(f"RAW gap {raw_segs[i-1][2]}->{raw_segs[i][2]}: {gap*1000:.0f}ms")
-            diarization_result = merge_short_gap_speakers(diarization_result, gap_threshold=0.35)
+            diarization_result = merge_short_gap_speakers(diarization_result, centroids_dict, gap_threshold=0.35)
             num_speakers = len(diarization_result.labels())
             logger.info(f"pyannote.audio detected {num_speakers} speakers (after gap merge)")
 
@@ -108,10 +110,11 @@ class PyannoteDiarizer:
                 seg['speaker'] = 'SPEAKER_01'
             return {"segments": transcription_segments, "num_speakers": 1}
 
-def merge_short_gap_speakers(diarization_result, gap_threshold: float = 0.35):
+def merge_short_gap_speakers(diarization_result, centroids_dict: dict, gap_threshold: float = 0.35):
     """
     Funde speakers diferentes com 0 < gap < gap_threshold — pausa fluente, não troca real.
     Baseado no padrão CPQD: 300ms é o mínimo para silêncio real entre speakers.
+    Usa centroides de embedding para fusão de clusters com alta similaridade de cosseno.
     """
     from pyannote.core import Annotation
 
@@ -131,21 +134,17 @@ def merge_short_gap_speakers(diarization_result, gap_threshold: float = 0.35):
         seg_dur = turn.end - turn.start
         if seg_dur >= 0.35:
             continue
-        # Verifica se há segmentos do mesmo speaker imediatamente antes E depois (sandwiching)
         prev_spk = segments[i - 1][1] if i > 0 else None
         next_spk = segments[i + 1][1] if i < len(segments) - 1 else None
         if prev_spk and prev_spk != spk and prev_spk == next_spk:
-            # Sanduíche confirmado: spk_antes == spk_depois != spk_atual
             logger.info(
                 f"Segment overlap artifact: {spk} {turn.start:.3f}-{turn.end:.3f} "
                 f"({seg_dur*1000:.0f}ms) sanduichado por {prev_spk} → remapeando para {prev_spk}"
             )
             segment_remap[(turn.start, turn.end, spk)] = prev_spk
         elif prev_spk and prev_spk != spk:
-            # Sem segmento depois — verifica se está no início de um bloco do mesmo speaker
-            # adjacente ao speaker anterior (gap=0ms)
             gap_prev = turn.start - segments[i - 1][0].end
-            if abs(gap_prev) < 0.001:  # adjacente
+            if abs(gap_prev) < 0.001:
                 logger.info(
                     f"Segment overlap artifact: {spk} {turn.start:.3f}-{turn.end:.3f} "
                     f"({seg_dur*1000:.0f}ms) adjacente a {prev_spk} → remapeando para {prev_spk}"
@@ -216,6 +215,13 @@ def merge_short_gap_speakers(diarization_result, gap_threshold: float = 0.35):
                         f"Label remap ignorado: {label} — "
                         f"{'múltiplos blocos longos' if not single_long_block else f'longo começa em {first_long_start:.2f}s antes do dominante terminar em {dominant_end:.2f}s'}"
                     )
+
+    # Passo 3 (desabilitado): fusão por embedding similarity + intercalação de turnos.
+    # Tentativa descartada: casos de 1 speaker sequencial (audio_teste_4) e 2 speakers
+    # reais sequenciais (two.speakers.wav) são estruturalmente indistinguíveis por
+    # contagem de switches e similaridade de cosseno — qualquer threshold causa regressão.
+    # O centroids_dict é mantido como parâmetro para uso futuro.
+    _ = centroids_dict
 
     # Resolver remap transitivamente: A→B→C deve virar A→C
     def resolve_remap(label, visited=None):

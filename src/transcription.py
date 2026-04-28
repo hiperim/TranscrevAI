@@ -23,6 +23,28 @@ class TranscriptionResult:
     processing_time: float
     word_count: int
 
+WHISPER_HALLUCINATIONS = {
+    "legendas pela comunidade amara.org",
+    "legendas pela comunidade de amara.org",
+    "legendas por amara.org",
+    "transcrito por amara.org",
+    "traduzido pela comunidade amara.org",
+    "subtitles by the amara.org community",
+    "obrigado por assistir",
+    "obrigado por sua audiência",
+    "inscreva-se no canal",
+    "deixe o seu like",
+    "até o próximo vídeo",
+    "ative o sininho",
+    "versão brasileira:",
+    "tradução e legendas:",
+    "transcrição:",
+    "revisão:",
+    "transcrição de áudio em português brasileiro",
+    "transcrição de áudio em português",
+}
+
+
 class TranscriptionService:
     def __init__(self, model_name: str = "pierreguillou/whisper-medium-portuguese", device: str = "cpu"):
         self.model_name = model_name
@@ -140,6 +162,15 @@ class TranscriptionService:
         raw_segments = []
         full_text = ""
         for seg in segments_generator:
+            # Filtro duplo: blocklist de alucinações conhecidas + silêncio/baixa confiança
+            text_normalized = seg.text.strip().lower()
+            if any(h in text_normalized for h in WHISPER_HALLUCINATIONS):
+                logger.info(f"Hallucination filtered: {seg.text.strip()!r}")
+                continue
+            if seg.no_speech_prob > 0.6 and seg.avg_logprob < -1.0:
+                logger.info(f"Low-confidence segment filtered: no_speech={seg.no_speech_prob:.2f} logprob={seg.avg_logprob:.2f}")
+                continue
+
             segment_dict = {
                 "start": seg.start,
                 "end": seg.end,
@@ -186,7 +217,10 @@ class TranscriptionService:
                 "beam_size": 3,
                 "best_of": 3,
                 "word_timestamps": word_timestamps,
-                "vad_filter": False
+                "vad_filter": False,
+                "condition_on_previous_text": False,
+                "compression_ratio_threshold": 2.4,
+                "no_speech_threshold": 0.6,
             }
 
             # Execute in separate thread

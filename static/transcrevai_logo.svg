@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 220" width="700" height="220">
+  <!-- Wave bars: ~70 bars spanning full width, heights varied organically, centered at y=110 -->
+
+  <rect x="8"   y="106" width="5" height="8"   rx="1" fill="#999"/>
+  <rect x="17"  y="100" width="5" height="20"  rx="1" fill="#AAA"/>
+  <rect x="26"  y="88"  width="5" height="44"  rx="2" fill="#BBB"/>
+  <rect x="35"  y="74"  width="5" height="72"  rx="2" fill="#CCC"/>
+  <rect x="44"  y="60"  width="5" height="100" rx="2" fill="#BBB"/>
+  <rect x="53"  y="80"  width="5" height="60"  rx="2" fill="#AAA"/>
+  <rect x="62"  y="50"  width="5" height="120" rx="2" fill="#CCC"/>
+  <rect x="71"  y="68"  width="5" height="84"  rx="2" fill="#BBB"/>
+  <rect x="80"  y="90"  width="5" height="40"  rx="2" fill="#AAA"/>
+  <rect x="89"  y="55"  width="5" height="110" rx="2" fill="#CCC"/>
+  <rect x="98"  y="42"  width="5" height="136" rx="2" fill="#BBB"/>
+  <rect x="107" y="72"  width="5" height="76"  rx="2" fill="#AAA"/>
+  <rect x="116" y="62"  width="5" height="96"  rx="2" fill="#BBB"/>
+  <rect x="125" y="48"  width="5" height="124" rx="2" fill="#CCC"/>
+  <rect x="134" y="78"  width="5" height="64"  rx="2" fill="#AAA"/>
+  <rect x="143" y="92"  width="5" height="36"  rx="2" fill="#BBB"/>
+  <rect x="152" y="58"  width="5" height="104" rx="2" fill="#CCC"/>
+  <rect x="161" y="84"  width="5" height="52"  rx="2" fill="#AAA"/>
+  <rect x="170" y="70"  width="5" height="80"  rx="2" fill="#BBB"/>
+  <rect x="179" y="46"  width="5" height="128" rx="2" fill="#CCC"/>
+  <rect x="188" y="82"  width="5" height="56"  rx="2" fill="#AAA"/>
+  <rect x="197" y="66"  width="5" height="88"  rx="2" fill="#BBB"/>
+  <rect x="206" y="94"  width="5" height="32"  rx="2" fill="#AAA"/>
+  <rect x="215" y="52"  width="5" height="116" rx="2" fill="#CCC"/>
+  <rect x="224" y="76"  width="5" height="68"  rx="2" fill="#BBB"/>
+  <rect x="233" y="96"  width="5" height="28"  rx="2" fill="#999"/>
+  <rect x="242" y="64"  width="5" height="92"  rx="2" fill="#BBB"/>
+  <rect x="251" y="86"  width="5" height="48"  rx="2" fill="#AAA"/>
+
+  <!-- Center gap for text (~252 to ~448) - sparse bars behind text -->
+  <rect x="262" y="98"  width="5" height="24"  rx="2" fill="#555"/>
+  <rect x="278" y="88"  width="5" height="44"  rx="2" fill="#555"/>
+  <rect x="294" y="75"  width="5" height="70"  rx="2" fill="#555"/>
+  <rect x="310" y="82"  width="5" height="56"  rx="2" fill="#555"/>
+  <rect x="326" y="70"  width="5" height="80"  rx="2" fill="#555"/>
+  <rect x="342" y="60"  width="5" height="100" rx="2" fill="#555"/>
+  <rect x="358" y="72"  width="5" height="76"  rx="2" fill="#555"/>
+  <rect x="374" y="65"  width="5" height="90"  rx="2" fill="#555"/>
+  <rect x="390" y="78"  width="5" height="64"  rx="2" fill="#555"/>
+  <rect x="406" y="86"  width="5" height="48"  rx="2" fill="#555"/>
+  <rect x="422" y="92"  width="5" height="36"  rx="2" fill="#555"/>
+  <rect x="438" y="80"  width="5" height="60"  rx="2" fill="#555"/>
+
+  <rect x="452" y="86"  width="5" height="48"  rx="2" fill="#AAA"/>
+  <rect x="461" y="64"  width="5" height="92"  rx="2" fill="#BBB"/>
+  <rect x="470" y="96"  width="5" height="28"  rx="2" fill="#999"/>
+  <rect x="479" y="76"  width="5" height="68"  rx="2" fill="#BBB"/>
+  <rect x="488" y="52"  width="5" height="116" rx="2" fill="#CCC"/>
+  <rect x="497" y="86"  width="5" height="48"  rx="2" fill="#AAA"/>
+  <rect x="506" y="68"  width="5" height="84"  rx="2" fill="#BBB"/>
+  <rect x="515" y="94"  width="5" height="32"  rx="2" fill="#AAA"/>
+  <rect x="524" y="58"  width="5" height="104" rx="2" fill="#CCC"/>
+  <rect x="533" y="78"  width="5" height="64"  rx="2" fill="#BBB"/>
+  <rect x="542" y="44"  width="5" height="132" rx="2" fill="#CCC"/>
+  <rect x="551" y="70"  width="5" height="80"  rx="2" fill="#AAA"/>
+  <rect x="560" y="84"  width="5" height="52"  rx="2" fill="#BBB"/>
+  <rect x="569" y="56"  width="5" height="108" rx="2" fill="#CCC"/>
+  <rect x="578" y="90"  width="5" height="40"  rx="2" fill="#AAA"/>
+  <rect x="587" y="66"  width="5" height="88"  rx="2" fill="#BBB"/>
+  <rect x="596" y="48"  width="5" height="124" rx="2" fill="#CCC"/>
+  <rect x="605" y="74"  width="5" height="72"  rx="2" fill="#BBB"/>
+  <rect x="614" y="92"  width="5" height="36"  rx="2" fill="#AAA"/>
+  <rect x="623" y="60"  width="5" height="100" rx="2" fill="#CCC"/>
+  <rect x="632" y="80"  width="5" height="60"  rx="2" fill="#AAA"/>
+  <rect x="641" y="72"  width="5" height="76"  rx="2" fill="#BBB"/>
+  <rect x="650" y="54"  width="5" height="112" rx="2" fill="#CCC"/>
+  <rect x="659" y="82"  width="5" height="56"  rx="2" fill="#BBB"/>
+  <rect x="668" y="96"  width="5" height="28"  rx="2" fill="#AAA"/>
+  <rect x="677" y="104" width="5" height="12"  rx="1" fill="#999"/>
+  <rect x="686" y="108" width="5" height="4"   rx="1" fill="#888"/>
+
+  <!-- TranscrevAI text -->
+  <text x="350" y="122"
+        font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="72"
+        font-weight="700"
+        fill="#E8E8E8"
+        text-anchor="middle"
+        letter-spacing="-1">TranscrevAI</text>
+
+  <!-- Subtitle -->
+  <text x="350" y="158"
+        font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="17"
+        font-weight="400"
+        fill="#808080"
+        text-anchor="middle"
+        letter-spacing="0.5">Transcrição e Diarização Inteligentes</text>
+</svg>

@@ -1,0 +1,28 @@
+﻿1
+00:00:01,919 --> 00:00:06,839
+[SPEAKER_01] Bem-vindo, este é o
+Transcreve AI, meu aplicativo de
+transcrição de áudio com processamento
+
+2
+00:00:06,839 --> 00:00:11,140
+[SPEAKER_01] 100% local em conformidade
+com a Lei Geral de Proteção de Dados
+Brasileira.
+
+3
+00:00:11,519 --> 00:00:15,500
+[SPEAKER_02] Por meio de inteligência
+artificial, o aplicativo identifica quem
+disse o que e
+
+4
+00:00:15,500 --> 00:00:19,899
+[SPEAKER_02] Quando em uma gravação, seja
+por envio de arquivo ou gravação ao vivo
+feita pelo
+
+5
+00:00:19,899 --> 00:00:22,940
+[SPEAKER_02] Usuário, sem enviar nenhum
+dado para servidores externos.

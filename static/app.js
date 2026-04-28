@@ -329,16 +329,27 @@ class LiveRecorder {
 
     updateButtonStates() {
         const [startBtn, pauseBtn, resumeBtn, stopBtn] = ['start-live-btn', 'pause-live-btn', 'resume-live-btn', 'stop-live-btn'].map(id => document.getElementById(id));
-        [startBtn, pauseBtn, resumeBtn, stopBtn].forEach(btn => { if (btn) btn.disabled = true; });
 
         if (this.recordingState === 'idle') {
-            if (startBtn) startBtn.disabled = false;
+            if (startBtn) { startBtn.disabled = false; startBtn.style.display = ''; }
+            if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.style.display = 'none'; }
+            if (resumeBtn) { resumeBtn.disabled = true; resumeBtn.style.display = 'none'; }
+            if (stopBtn) { stopBtn.disabled = true; stopBtn.style.display = 'none'; }
         } else if (this.recordingState === 'recording') {
-            if (pauseBtn) pauseBtn.disabled = false;
-            if (stopBtn) stopBtn.disabled = false;
+            if (startBtn) { startBtn.disabled = true; startBtn.style.display = 'none'; }
+            if (pauseBtn) { pauseBtn.disabled = false; pauseBtn.style.display = ''; }
+            if (resumeBtn) { resumeBtn.disabled = true; resumeBtn.style.display = 'none'; }
+            if (stopBtn) { stopBtn.disabled = false; stopBtn.style.display = ''; }
         } else if (this.recordingState === 'paused') {
-            if (resumeBtn) resumeBtn.disabled = false;
-            if (stopBtn) stopBtn.disabled = false;
+            if (startBtn) { startBtn.disabled = true; startBtn.style.display = 'none'; }
+            if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.style.display = 'none'; }
+            if (resumeBtn) { resumeBtn.disabled = false; resumeBtn.style.display = ''; }
+            if (stopBtn) { stopBtn.disabled = false; stopBtn.style.display = ''; }
+        } else if (this.recordingState === 'processing') {
+            if (startBtn) { startBtn.disabled = true; startBtn.style.display = ''; }
+            if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.style.display = 'none'; }
+            if (resumeBtn) { resumeBtn.disabled = true; resumeBtn.style.display = 'none'; }
+            if (stopBtn) { stopBtn.disabled = true; stopBtn.style.display = 'none'; }
         }
     }
 
