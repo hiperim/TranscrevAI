@@ -1,9 +1,8 @@
 import os
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Optional
 from dataclasses import dataclass, field
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -13,51 +12,30 @@ class AppConfig:
 
     # --- Core directories
     base_dir: Path = field(init=False)
-    src_dir: Path = field(init=False)
     data_dir: Path = field(init=False)
     recordings_dir: Path = field(init=False)
     temp_dir: Path = field(init=False)
     logs_dir: Path = field(init=False)
     models_dir: Path = field(init=False)
-    changes_dir: Path = field(init=False)
-    
+
     # --- Model config
     model_name: str = "medium"
-    model_language: str = "pt"
     device: str = "cpu"
     compute_type: str = "int8"
-    
-    # --- Performance settings
-    max_memory_gb: float = 2.0
-    max_workers: int = 4
-    processing_timeout: float = 300.0  # 5 minutes
-    
-    # --- Websocket settings
-    websocket_timeout: float = 30.0
-    max_message_size: int = 16 * 1024 * 1024  # 16MB
-    heartbeat_interval: float = 10.0
-    
-    # --- Audio settings
-    sample_rate: int = 16000
-    chunk_size: int = 1024
-    max_audio_duration: float = 600.0  # 1 hour
 
     # --- Diarization settings
     diarization_threshold: float = 0.335
     diarization_min_speakers: Optional[int] = None
     diarization_max_speakers: Optional[int] = None
     diarization_min_cluster_size: int = 12
-    
+
     # --- Logging settings
     log_level: str = "INFO"
     log_max_bytes: int = 10 * 1024 * 1024  # 10MB
     log_backup_count: int = 5
-    
+
     # --- Dev settings
     debug_mode: bool = False
-    force_cpu: bool = False
-    enable_performance_monitoring: bool = True
-    enable_memory_profiling: bool = False
 
     # --- Server settings
     host: str = "0.0.0.0"
@@ -68,20 +46,18 @@ class AppConfig:
     def __post_init__(self):
         # Initialize portable paths (relative to project root)
         self.base_dir = Path(__file__).parent.parent.resolve()
-        self.src_dir = self.base_dir / "src"
         self.data_dir = self.base_dir / "data"
         self.recordings_dir = self.data_dir / "recordings"
         self.temp_dir = self.base_dir / "temp"
         self.logs_dir = self.base_dir / "logs"
         self.models_dir = self.base_dir / "models"
-        self.changes_dir = self.base_dir / ".claude" / "CHANGES_MADE"
 
         self._validate_and_create_directories()
         self._load_environment_overrides()
         self._validate_settings()
         
     def _validate_and_create_directories(self):
-        directories = [self.data_dir, self.recordings_dir, self.temp_dir, self.logs_dir, self.models_dir, self.changes_dir]
+        directories = [self.data_dir, self.recordings_dir, self.temp_dir, self.logs_dir, self.models_dir]
         for directory in directories:
             try:
                 directory.mkdir(parents=True, exist_ok=True)
@@ -93,7 +69,6 @@ class AppConfig:
         env_mappings = {
             'TRANSCREVAI_MODEL_NAME': 'model_name',
             'TRANSCREVAI_DEVICE': 'device',
-            'TRANSCREVAI_MAX_MEMORY': 'max_memory_gb',
             'TRANSCREVAI_LOG_LEVEL': 'log_level',
             'TRANSCREVAI_DEBUG': 'debug_mode',
             'TRANSCREVAI_HOST': 'host',
@@ -109,7 +84,7 @@ class AppConfig:
             env_value = os.getenv(env_key)
             if env_value:
                 try:
-                    if attr_name in ['max_memory_gb', 'diarization_threshold']:
+                    if attr_name in ['diarization_threshold']:
                         setattr(self, attr_name, float(env_value))
                     elif attr_name in ['port', 'diarization_min_speakers', 'diarization_max_speakers', 'diarization_min_cluster_size']:
                         setattr(self, attr_name, int(env_value) if env_value.lower() != 'none' else None)
