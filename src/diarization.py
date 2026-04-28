@@ -90,8 +90,14 @@ class PyannoteDiarizer:
         logger.info(f"Starting pyannote.audio diarization for: {audio_path}")
         try:
             diarization_result = self.pipeline(audio_path)
+            raw_segs = [(t.start, t.end, spk) for t, _, spk in diarization_result.itertracks(yield_label=True)]
+            logger.info(f"RAW pyannote output: {[(s[2], round(s[0],3), round(s[1],3)) for s in raw_segs]}")
+            for i in range(1, len(raw_segs)):
+                gap = raw_segs[i][0] - raw_segs[i-1][1]
+                logger.info(f"RAW gap {raw_segs[i-1][2]}->{raw_segs[i][2]}: {gap*1000:.0f}ms")
+            diarization_result = merge_short_gap_speakers(diarization_result, gap_threshold=0.35)
             num_speakers = len(diarization_result.labels())
-            logger.info(f"pyannote.audio detected {num_speakers} speakers")
+            logger.info(f"pyannote.audio detected {num_speakers} speakers (after gap merge)")
 
             aligned_segments = align_speakers_by_word(transcription_segments, diarization_result, audio_path)
             result = {"segments": aligned_segments, "num_speakers": int(num_speakers)}
@@ -101,6 +107,120 @@ class PyannoteDiarizer:
             for seg in transcription_segments:
                 seg['speaker'] = 'SPEAKER_01'
             return {"segments": transcription_segments, "num_speakers": 1}
+
+def merge_short_gap_speakers(diarization_result, gap_threshold: float = 0.35):
+    """
+    Funde speakers diferentes com 0 < gap < gap_threshold — pausa fluente, não troca real.
+    Baseado no padrão CPQD: 300ms é o mínimo para silêncio real entre speakers.
+    """
+    from pyannote.core import Annotation
+
+    segments = [
+        (turn, speaker)
+        for turn, _, speaker in diarization_result.itertracks(yield_label=True)
+    ]
+    segments.sort(key=lambda x: x[0].start)
+
+    if len(segments) < 2:
+        return diarization_result
+
+    # Passo 0: segment_remap — segmento curto sanduichado entre segmentos do mesmo speaker é artefato
+    # Padrão: SPK_A ... SPK_B(curto) ... SPK_A → SPK_B é overlap detection espúrio
+    segment_remap: dict = {}  # key: (start, end, spk) → novo label
+    for i, (turn, spk) in enumerate(segments):
+        seg_dur = turn.end - turn.start
+        if seg_dur >= 0.35:
+            continue
+        # Verifica se há segmentos do mesmo speaker imediatamente antes E depois (sandwiching)
+        prev_spk = segments[i - 1][1] if i > 0 else None
+        next_spk = segments[i + 1][1] if i < len(segments) - 1 else None
+        if prev_spk and prev_spk != spk and prev_spk == next_spk:
+            # Sanduíche confirmado: spk_antes == spk_depois != spk_atual
+            logger.info(
+                f"Segment overlap artifact: {spk} {turn.start:.3f}-{turn.end:.3f} "
+                f"({seg_dur*1000:.0f}ms) sanduichado por {prev_spk} → remapeando para {prev_spk}"
+            )
+            segment_remap[(turn.start, turn.end, spk)] = prev_spk
+        elif prev_spk and prev_spk != spk:
+            # Sem segmento depois — verifica se está no início de um bloco do mesmo speaker
+            # adjacente ao speaker anterior (gap=0ms)
+            gap_prev = turn.start - segments[i - 1][0].end
+            if abs(gap_prev) < 0.001:  # adjacente
+                logger.info(
+                    f"Segment overlap artifact: {spk} {turn.start:.3f}-{turn.end:.3f} "
+                    f"({seg_dur*1000:.0f}ms) adjacente a {prev_spk} → remapeando para {prev_spk}"
+                )
+                segment_remap[(turn.start, turn.end, spk)] = prev_spk
+
+    # Passo 1: remap por label — gap fluente entre speakers diferentes
+    remap: dict = {}
+    for i in range(1, len(segments)):
+        prev_turn, prev_spk = segments[i - 1]
+        curr_turn, curr_spk = segments[i]
+
+        resolved_prev = remap.get(prev_spk, prev_spk)
+        resolved_curr = remap.get(curr_spk, curr_spk)
+
+        if resolved_prev == resolved_curr:
+            continue
+
+        gap = curr_turn.start - prev_turn.end
+        if 0 < gap < gap_threshold:
+            logger.info(
+                f"Gap merge: {resolved_curr} → {resolved_prev} "
+                f"(gap={gap*1000:.0f}ms entre {prev_turn.end:.2f}s e {curr_turn.start:.2f}s)"
+            )
+            remap[curr_spk] = resolved_prev
+
+    if not remap and not segment_remap:
+        return diarization_result
+
+    # Após Passo 0: se um label teve segmentos sanduichados remapeados E tem segmentos longos,
+    # esses longos foram contaminados pelo clustering do artefato → remapear label inteiro.
+    # Só aplica se TODOS os segmentos curtos do label foram identificados como artefatos
+    # (sanduíche confirmado), garantindo que o label não tem fala curta legítima.
+    labels_with_remap = set(k[2] for k in segment_remap)
+    for label in labels_with_remap:
+        label_segs = [(t, s) for t, s in segments if s == label]
+        short_segs = [(t, s) for t, s in label_segs if (t.end - t.start) < 0.35]
+        long_segs = [(t, s) for t, s in label_segs if (t.end - t.start) >= 0.35]
+        all_short_remapped = all((t.start, t.end, s) in segment_remap for t, s in short_segs)
+
+        if long_segs and all_short_remapped:
+            # Filtro de Coerência de Turno — três gatilhos simultâneos:
+            # 1. Artefato curto sanduichado (já garantido pelo Passo 0)
+            # 2. Primeiro segmento longo do label suspeito começa após o fim real do dominante
+            # 3. Label suspeito tem apenas 1 bloco longo (múltiplos = speaker real com turnos)
+            artifact_spk = list(set(segment_remap[(t.start, t.end, s)]
+                                    for t, s in short_segs if (t.start, t.end, s) in segment_remap))
+            dominant_spk = artifact_spk[0] if artifact_spk else None
+            if dominant_spk:
+                first_long_start = min(t.start for t, _ in long_segs)
+                dominant_segs_before = [t for t, s in segments
+                                        if s == dominant_spk and t.end <= first_long_start]
+                dominant_end = max(t.end for t in dominant_segs_before) if dominant_segs_before else 0
+                long_starts_after_dominant = first_long_start >= dominant_end - 0.1
+                single_long_block = len(long_segs) == 1
+                if long_starts_after_dominant and single_long_block:
+                    remap[label] = dominant_spk
+                    logger.info(
+                        f"Label remap: {label} → {dominant_spk} "
+                        f"(coerência de turno: 1 bloco longo começa após fim do dominante em {dominant_end:.2f}s)"
+                    )
+                else:
+                    logger.info(
+                        f"Label remap ignorado: {label} — "
+                        f"{'múltiplos blocos longos' if not single_long_block else f'longo começa em {first_long_start:.2f}s antes do dominante terminar em {dominant_end:.2f}s'}"
+                    )
+
+    merged = Annotation()
+    for turn, speaker in segments:  # reutiliza mesma lista — mesmos objetos Segment, keys batem
+        key = (turn.start, turn.end, speaker)
+        new_label = segment_remap.get(key) or remap.get(speaker, speaker)
+        merged[turn] = new_label
+
+    return merged
+
 
 def extract_pitch(audio_path: str, start_time: float, end_time: float) -> Optional[float]:
     """Extract mean F0 (pitch) from audio segment"""

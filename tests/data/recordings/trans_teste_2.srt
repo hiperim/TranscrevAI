@@ -1,0 +1,20 @@
+﻿1
+00:00:00,599 --> 00:00:06,599
+[SPEAKER_01] Bem-vindo, deixa eu
+transcreve aí meu aplicativo de
+transcrição de áudio com processamento
+100% local em conformidade com a Lei Geral
+de Proteção de Dados Brasileira.
+
+2
+00:00:10,019 --> 00:00:15,880
+[SPEAKER_02] Por meio de inteligência
+artificial, o aplicativo identifica quem
+disse o que e quando em uma gravação,
+
+3
+00:00:16,100 --> 00:00:22,079
+[SPEAKER_02] Seja por envio de arquivo ou
+gravação ao vivo feita pelo usuário, sem
+enviar nenhum dado para servidores
+externos.
