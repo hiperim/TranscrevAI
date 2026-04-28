@@ -191,9 +191,13 @@ def merge_short_gap_speakers(diarization_result, gap_threshold: float = 0.35):
             # 1. Artefato curto sanduichado (já garantido pelo Passo 0)
             # 2. Primeiro segmento longo do label suspeito começa após o fim real do dominante
             # 3. Label suspeito tem apenas 1 bloco longo (múltiplos = speaker real com turnos)
-            artifact_spk = list(set(segment_remap[(t.start, t.end, s)]
-                                    for t, s in short_segs if (t.start, t.end, s) in segment_remap))
-            dominant_spk = artifact_spk[0] if artifact_spk else None
+            #
+            # dominant_spk = destino do artefato que aparece mais cedo no áudio
+            # (artefatos adjacentes ao início têm precedência — são o "speaker original")
+            short_remapped = [(t, segment_remap[(t.start, t.end, s)])
+                              for t, s in short_segs if (t.start, t.end, s) in segment_remap]
+            short_remapped.sort(key=lambda x: x[0].start)
+            dominant_spk = short_remapped[0][1] if short_remapped else None
             if dominant_spk:
                 first_long_start = min(t.start for t, _ in long_segs)
                 dominant_segs_before = [t for t, s in segments
@@ -213,10 +217,27 @@ def merge_short_gap_speakers(diarization_result, gap_threshold: float = 0.35):
                         f"{'múltiplos blocos longos' if not single_long_block else f'longo começa em {first_long_start:.2f}s antes do dominante terminar em {dominant_end:.2f}s'}"
                     )
 
+    # Resolver remap transitivamente: A→B→C deve virar A→C
+    def resolve_remap(label, visited=None):
+        if visited is None:
+            visited = set()
+        if label in visited:
+            return label  # ciclo — para aqui
+        visited.add(label)
+        target = remap.get(label)
+        if target is None or target == label:
+            return label
+        return resolve_remap(target, visited)
+
     merged = Annotation()
     for turn, speaker in segments:  # reutiliza mesma lista — mesmos objetos Segment, keys batem
         key = (turn.start, turn.end, speaker)
-        new_label = segment_remap.get(key) or remap.get(speaker, speaker)
+        if key in segment_remap:
+            # Artefato curto — vai direto para o destino do remap, depois resolve transitivamente
+            intermediate = segment_remap[key]
+            new_label = resolve_remap(intermediate)
+        else:
+            new_label = resolve_remap(speaker)
         merged[turn] = new_label
 
     return merged

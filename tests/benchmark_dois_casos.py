@@ -1,7 +1,8 @@
 """
-Benchmark de diarização para dois casos:
+Benchmark de diarização para três casos:
   1. audio_teste_2.wav — falante único, ambiente controlado (esperado: 1 speaker)
-  2. two.speakers.wav  — dois falantes reais (esperado: 2 speakers)
+  2. audio_teste_3.wav — falante único com artefato de overlap (esperado: 1 speaker)
+  3. two.speakers.wav  — dois falantes reais (esperado: 2 speakers)
 
 Mede WER e acurácia de diarização. Salva log em tests/logs/.
 """
@@ -32,11 +33,18 @@ RECORDINGS = Path(__file__).parent / "data" / "recordings"
 
 CASES = [
     {
-        "name": "single_speaker_controlled",
+        "name": "single_speaker_teste2",
         "audio": RECORDINGS / "audio_teste_2.wav",
         "expected_srt": RECORDINGS / "trans_teste_2.srt",
         "expected_speakers": 1,
         "description": "Falante único, ambiente controlado, PT-BR, fala contínua",
+    },
+    {
+        "name": "single_speaker_teste3",
+        "audio": RECORDINGS / "audio_teste_3.wav",
+        "expected_srt": RECORDINGS / "trans_teste_3.srt",
+        "expected_speakers": 1,
+        "description": "Falante único com artefato de overlap, PT-BR",
     },
     {
         "name": "two_speakers",
@@ -284,7 +292,7 @@ async def run_case(case: dict, svc: TranscriptionService, diarizer: PyannoteDiar
 
 async def run_benchmark():
     print(f"\n{'='*60}")
-    print("BENCHMARK — Diarização: falante único vs. dois falantes")
+    print("BENCHMARK — Diarização: falante único (x2) vs. dois falantes")
     print(f"{'='*60}")
 
     print("\nInicializando modelos (reutilizados para todos os casos)...")
