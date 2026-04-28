@@ -47,6 +47,9 @@ http://localhost:8000
 # Rodar em background
 docker compose -f docker-compose.pull.yml up -d
 
+# Forcar pull da imagem mais recente e subir
+docker compose -f docker-compose.pull.yml up -d --pull always
+
 # Ver logs
 docker compose -f docker-compose.pull.yml logs -f
 
@@ -56,23 +59,67 @@ docker compose -f docker-compose.pull.yml down
 
 ---
 
-## Build Local (Para Desenvolvedores)
+## Build e Push (Para Mantenedores)
 
-1. Crie `.env` com token HF:
-   ```
-   HUGGING_FACE_HUB_TOKEN=hf_xxx
-   ```
+### Pre-requisitos
 
-2. Baixe os modelos de IA/ML (~3-5GB):
-   ```bash
-   python SETUP_Docker_Models_Local-install/download_models.py
-   ```
+- Docker Desktop com Buildx
+- `.env` com `HUGGING_FACE_HUB_TOKEN=hf_xxx`
+- Login no Docker Hub: `docker login`
 
-3. Execute o build:
-   ```bash
-   # Windows
-   .\SETUP_Docker_Models_Local-install\build-multiarch.ps1
+### Processo completo (Windows PowerShell)
 
-   # Linux/Mac
-   ./SETUP_Docker_Models_Local-install/build-multiarch.sh
-   ```
+**1. Carregar variaveis de ambiente do .env:**
+
+```powershell
+Get-Content .env | ForEach-Object {
+    if ($_ -match '^(?<name>.*?)=(?<value>.*)$') {
+        $name = $Matches['name'].Trim()
+        $value = $Matches['value'].Trim().Trim('"').Trim("'")
+        [System.Environment]::SetEnvironmentVariable($name, $value, "Process")
+    }
+}
+```
+
+**2. Recriar builder do zero (evita cache de builds anteriores):**
+
+```powershell
+docker buildx rm multiarch-fixed --force
+docker buildx create --name multiarch-fixed --driver docker-container --buildkitd-config C:\transcrevai\buildkitd.toml --use
+docker buildx inspect --bootstrap
+```
+
+O `buildkitd.toml` configura DNS externo (8.8.8.8 / 1.1.1.1) para o container buildkit conseguir fazer push ao Docker Hub.
+
+**3. Build e push (AMD64 + ARM64, sem cache):**
+
+```powershell
+docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t hiperim/transcrevai:latest --push -f Dockerfile.multiarch .
+```
+
+### Usando o script automatizado
+
+```powershell
+.\SETUP_Docker_Models_Local-install\build-multiarch.ps1
+```
+
+O script faz os 3 passos acima de forma interativa.
+
+---
+
+## Atualizar imagem no servidor
+
+Apos novo build e push, no servidor:
+
+```bash
+docker compose -f docker-compose.pull.yml up -d --pull always
+```
+
+---
+
+## Notas
+
+- `--no-cache` garante build limpo sem reuso de layers anteriores
+- O builder `multiarch-fixed` deve ser recriado do zero a cada build para evitar problemas de cache e DNS
+- A imagem atual e `linux/amd64` + `linux/arm64` — Docker seleciona automaticamente a arquitetura correta no pull
+- Para buildar so AMD64 (mais rapido): substituir `linux/amd64,linux/arm64` por `linux/amd64`
