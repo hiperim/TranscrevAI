@@ -818,6 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 console.log('[DEBUG] Calling startRecording()');
                 await liveRecorder.startRecording();
+                window.startWaveAnim?.();
                 console.log('[DEBUG] startRecording() completed');
             } catch (error) {
                 console.error('[DEBUG] Error in startRecording:', error);
@@ -828,11 +829,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pauseBtn = document.getElementById('pause-live-btn');
-    if (pauseBtn) pauseBtn.addEventListener('click', () => liveRecorder?.pauseRecording());
+    if (pauseBtn) pauseBtn.addEventListener('click', () => {
+        liveRecorder?.pauseRecording();
+        window.stopWaveAnim?.();
+    });
 
     const resumeBtn = document.getElementById('resume-live-btn');
-    if (resumeBtn) resumeBtn.addEventListener('click', () => liveRecorder?.resumeRecording());
+    if (resumeBtn) resumeBtn.addEventListener('click', () => {
+        liveRecorder?.resumeRecording();
+        window.startWaveAnim?.();
+    });
 
     const stopBtn = document.getElementById('stop-live-btn');
-    if (stopBtn) stopBtn.addEventListener('click', () => liveRecorder?.stopRecording());
+    if (stopBtn) stopBtn.addEventListener('click', () => {
+        liveRecorder?.stopRecording();
+        window.stopWaveAnim?.();
+    });
 });

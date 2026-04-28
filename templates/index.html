@@ -138,12 +138,66 @@
         };
 
         const wave = document.getElementById('soundwave');
-        generateMultiPeakWave().forEach(h => {
+        const staticHeights = generateMultiPeakWave();
+        const bars = staticHeights.map(h => {
             const bar = document.createElement('div');
             bar.className = 'bar';
             bar.style.height = h + '%';
             wave.appendChild(bar);
+            return bar;
         });
+
+        let waveRaf = null;
+        let waveMode = 'intro';
+        let waveT = 0;          // tempo acumulado da animação (não avança quando pausado)
+        let waveLast = null;    // timestamp do último frame
+
+        function animateWave(now) {
+            if (waveMode === 'stopped') return;
+
+            if (waveLast !== null) waveT += (now - waveLast) / 1000;
+            waveLast = now;
+
+            const factor_for = (amp, i) => 0.75 + amp * Math.sin(waveT * 4 + i * 0.5);
+
+            if (waveMode === 'intro') {
+                const half = 1.5;
+                const amp = waveT < half
+                    ? 0.25 * (waveT / half)
+                    : 0.25 * (1 - (waveT - half) / half);
+                if (waveT >= 3) {
+                    waveMode = 'stopped';
+                    waveRaf = null;
+                    waveLast = null;
+                    return;
+                }
+                bars.forEach((bar, i) => {
+                    bar.style.height = (staticHeights[i] * Math.max(0.5, factor_for(amp, i))) + '%';
+                });
+            } else if (waveMode === 'live') {
+                bars.forEach((bar, i) => {
+                    bar.style.height = (staticHeights[i] * factor_for(0.25, i)) + '%';
+                });
+            }
+
+            waveRaf = requestAnimationFrame(animateWave);
+        }
+
+        window.startWaveAnim = function() {
+            waveMode = 'live';
+            waveLast = null; // reseta referência para não somar tempo pausado
+            if (waveRaf) cancelAnimationFrame(waveRaf);
+            waveRaf = requestAnimationFrame(animateWave);
+        };
+
+        window.stopWaveAnim = function() {
+            waveMode = 'stopped';
+            waveLast = null;
+            if (waveRaf) { cancelAnimationFrame(waveRaf); waveRaf = null; }
+        };
+
+        // animação intro ao carregar
+        waveRaf = requestAnimationFrame(animateWave);
     </script>
     <script src="/static/app.js?v={{ static_hashes['app.js'] }}"></script>
 </body>
