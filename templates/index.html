@@ -147,32 +147,33 @@
             return bar;
         });
 
-        let waveRaf = null;
+        let waveRaf  = null;
         let waveMode = 'intro';
-        let waveT = 0;          // tempo acumulado da animação (não avança quando pausado)
-        let waveLast = null;    // timestamp do último frame
+        let waveT    = 0;        // tempo visual acumulado (segundos)
+        let timeOffset = 0;      // now/1000 - waveT no momento do último start
 
-        function animateWave(now) {
+        const factor_for = (amp, i) => 0.75 + amp * Math.sin(waveT * 4 + i * 0.5);
+
+        function animateWave(timestamp) {
             if (waveMode === 'stopped') return;
 
-            if (waveLast !== null) waveT += (now - waveLast) / 1000;
-            waveLast = now;
-
-            const factor_for = (amp, i) => 0.75 + amp * Math.sin(waveT * 4 + i * 0.5);
+            const now = timestamp / 1000;
+            waveT = now - timeOffset;
 
             if (waveMode === 'intro') {
-                const half = 1.5;
-                const amp = waveT < half
-                    ? 0.25 * (waveT / half)
-                    : 0.25 * (1 - (waveT - half) / half);
+                // amp cresce de 0→0.25 na primeira metade, fica em 0.25 na segunda
+                // termina com amp=0.25 para não haver estalo ao entrar no live
+                const amp = waveT < 1.5
+                    ? 0.25 * (waveT / 1.5)
+                    : 0.25;
                 if (waveT >= 3) {
+                    waveT = 3;
                     waveMode = 'stopped';
-                    waveRaf = null;
-                    waveLast = null;
+                    waveRaf  = null;
                     return;
                 }
                 bars.forEach((bar, i) => {
-                    bar.style.height = (staticHeights[i] * Math.max(0.5, factor_for(amp, i))) + '%';
+                    bar.style.height = (staticHeights[i] * factor_for(amp, i)) + '%';
                 });
             } else if (waveMode === 'live') {
                 bars.forEach((bar, i) => {
@@ -184,19 +185,22 @@
         }
 
         window.startWaveAnim = function() {
+            // timeOffset calibrado para que waveT comece exatamente onde parou
+            const now = performance.now() / 1000;
+            timeOffset = now - waveT;
             waveMode = 'live';
-            waveLast = null; // reseta referência para não somar tempo pausado
             if (waveRaf) cancelAnimationFrame(waveRaf);
             waveRaf = requestAnimationFrame(animateWave);
         };
 
         window.stopWaveAnim = function() {
+            // waveT já está salvo — basta parar o loop
             waveMode = 'stopped';
-            waveLast = null;
             if (waveRaf) { cancelAnimationFrame(waveRaf); waveRaf = null; }
         };
 
-        // animação intro ao carregar
+        // animação intro ao carregar — timeOffset calibrado para waveT=0 no primeiro frame
+        timeOffset = performance.now() / 1000;
         waveRaf = requestAnimationFrame(animateWave);
     </script>
     <script src="/static/app.js?v={{ static_hashes['app.js'] }}"></script>
