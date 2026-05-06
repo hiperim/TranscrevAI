@@ -314,7 +314,7 @@ TRANSCREVAI_LOG_LEVEL=INFO
 
 - **GET** `/` - Interface web principal
 - **GET** `/health` - Health check endpoint
-- **POST** `/upload` - Upload de arquivo de áudio (max 500MB, 2h)
+- **POST** `/upload` - Upload de arquivo de áudio (max 100MB, 50min)
 - **GET** `/download-srt/{session_id}` - Download de arquivo SRT
 - **GET** `/api/download/{session_id}/{file_type}` - Download genérico (audio/transcript/subtitles)
 
@@ -640,7 +640,7 @@ TRANSCREVAI_LOG_LEVEL=INFO
 
 - **GET** `/` - Main web interface
 - **GET** `/health` - Health check endpoint
-- **POST** `/upload` - Upload audio file (max 500MB, 2h)
+- **POST** `/upload` - Upload audio file (max 100MB, 50min)
 - **GET** `/download-srt/{session_id}` - Download SRT file
 - **GET** `/api/download/{session_id}/{file_type}` - Generic download (audio/transcript/subtitles)
 

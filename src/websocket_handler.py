@@ -11,7 +11,7 @@ from src.pipeline import process_audio_pipeline
 logger = logging.getLogger(__name__)
 
 # Limits for live recording
-MAX_RECORDING_DURATION = 7200  # 2 horas
+MAX_RECORDING_DURATION = 3000  # 50 min
 
 class WebSocketValidator:
 
@@ -35,6 +35,6 @@ class WebSocketValidator:
             return False
         elapsed_time = time.time() - recording_start_time
         if elapsed_time > MAX_RECORDING_DURATION:
-            logger.warning("Recording duration reached 2h limit", extra={"duration": elapsed_time, "limit": MAX_RECORDING_DURATION})
+            logger.warning("Recording duration reached 50min limit", extra={"duration": elapsed_time, "limit": MAX_RECORDING_DURATION})
             return True  # Signal for auto-stop
         return False
