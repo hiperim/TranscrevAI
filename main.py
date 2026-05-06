@@ -158,7 +158,7 @@ async def upload_audio(
 ):
 
     # File size validation
-    MAX_UPLOAD_SIZE = 100 * 1024 * 1024  # 100MB
+    MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500MB
     file_size = 0
     content = await file.read()
     file_size = len(content)
@@ -166,7 +166,7 @@ async def upload_audio(
     if file_size > MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=413,
-            detail=f"Arquivo muito grande. Tamanho máximo: 100MB. Tamanho recebido: {file_size / (1024*1024):.1f}MB"
+            detail=f"Arquivo muito grande. Tamanho máximo: 500MB. Tamanho recebido: {file_size / (1024*1024):.1f}MB"
         )
 
     # Reset file pointer for later processing
@@ -183,11 +183,11 @@ async def upload_audio(
         import librosa
         try:
             duration = librosa.get_duration(path=str(file_path))
-            if duration > 600:  # 10 min
+            if duration > 7200:  # 2 horas
                 Path(file_path).unlink(missing_ok=True)
                 raise HTTPException(
                     status_code=413,
-                    detail=f"Áudio muito longo. Duração máxima: 10 minutos. Duração: {duration/60:.1f} min"
+                    detail=f"Áudio muito longo. Duração máxima: 2 horas. Duração: {duration/60:.1f} min"
                 )
         except HTTPException:
             raise

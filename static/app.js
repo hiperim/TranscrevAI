@@ -483,7 +483,7 @@ async function setupWebSocketConnection(sessionId, onMessageHandler, retryCount 
 
 async function pollSessionStatus(sessionId) {
     const POLL_INTERVAL = 3000;   // 3 seconds between checks
-    const POLL_TIMEOUT  = 600000; // stop after 10 minutes
+    const POLL_TIMEOUT  = 7200000; // stop after 2 hours
     const started = Date.now();
 
     const uploadBtn = document.getElementById('upload-btn');
